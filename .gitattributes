@@ -1,0 +1,11 @@
+* text=auto eol=lf
+
+# Treat common document/binary formats as binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.pdf binary
+*.zip binary
+*.7z binary

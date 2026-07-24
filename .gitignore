@@ -1,0 +1,44 @@
+# Build artifacts
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+publish/
+artifacts/
+
+# .NET / NuGet
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.nupkg
+*.snupkg
+project.assets.json
+project.nuget.cache
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.code-workspace
+
+# Logs
+*.log
+logs/
+
+# Test output
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+# Local settings and secrets
+appsettings.Development.local.json
+appsettings.Local.json
+.env
+.env.*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
