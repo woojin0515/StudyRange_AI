@@ -42,12 +42,24 @@
             <MudDivider Class="my-4" />
 
             <MudText Typo="Typo.subtitle2">Workspace 선택</MudText>
-            <MudSelect T="string" Value="_selectedWorkspaceId" ValueChanged="OnWorkspaceChangedAsync" Variant="Variant.Outlined" Class="mt-2" FullWidth="true">
-                @foreach (var workspace in _workspaces)
-                {
-                    <MudSelectItem Value="@workspace.Id.ToString()">@workspace.Name</MudSelectItem>
-                }
-            </MudSelect>
+            <MudTable Items="_workspaces" Dense="true" Hover="true" Class="mt-2">
+                <HeaderContent>
+                    <MudTh>이름</MudTh>
+                    <MudTh>생성일</MudTh>
+                    <MudTh></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.Name</MudTd>
+                    <MudTd>@context.CreatedAtUtc.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</MudTd>
+                    <MudTd>
+                        <MudButton Variant="Variant.Outlined"
+                                   Color="@(IsSelectedWorkspace(context.Id) ? Color.Success : Color.Primary)"
+                                   OnClick="@(() => SelectWorkspaceAsync(context.Id))">
+                            @(IsSelectedWorkspace(context.Id) ? "선택됨" : "선택")
+                        </MudButton>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
             <MudText Typo="Typo.caption" Class="mt-1">현재 Workspace 수: @_workspaces.Count</MudText>
         </MudPaper>
     </MudItem>
@@ -201,10 +213,15 @@
         });
     }
 
-    private async Task OnWorkspaceChangedAsync(string value)
+    private async Task SelectWorkspaceAsync(Guid workspaceId)
     {
-        _selectedWorkspaceId = value;
+        _selectedWorkspaceId = workspaceId.ToString();
         await LoadWorkspaceDataAsync();
+    }
+
+    private bool IsSelectedWorkspace(Guid workspaceId)
+    {
+        return Guid.TryParse(_selectedWorkspaceId, out var selectedId) && selectedId == workspaceId;
     }
 
     private async Task AddExamRangeAsync()
