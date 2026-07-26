@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using StudyRange.Application.Contracts;
+using StudyRange.Infrastructure.Integrations;
 using StudyRange.Infrastructure.Persistence;
 using StudyRange.Infrastructure.Processing;
 using StudyRange.Infrastructure.Storage;
@@ -14,6 +15,10 @@ public static class DependencyInjection
     {
         services.Configure<PersistenceOptions>(configuration.GetSection(PersistenceOptions.SectionName));
         services.Configure<StorageOptions>(configuration.GetSection(StorageOptions.SectionName));
+        services.Configure<LlmOptions>(configuration.GetSection(LlmOptions.SectionName));
+        services.Configure<KotryApiOptions>(configuration.GetSection(KotryApiOptions.SectionName));
+        services.Configure<NcicApiOptions>(configuration.GetSection(NcicApiOptions.SectionName));
+        services.Configure<NeisApiOptions>(configuration.GetSection(NeisApiOptions.SectionName));
 
         var persistenceOptions = configuration.GetSection(PersistenceOptions.SectionName).Get<PersistenceOptions>() ?? new PersistenceOptions();
 
@@ -43,6 +48,28 @@ public static class DependencyInjection
             var options = sp.GetRequiredService<IOptions<StorageOptions>>().Value;
             return new LocalFileStorage(options.RootDirectory);
         });
+
+        var llmOptions = configuration.GetSection(LlmOptions.SectionName).Get<LlmOptions>() ?? new LlmOptions();
+        services.AddSingleton(llmOptions);
+        services.AddHttpClient<AzureOpenAiStudyContentGenerator>();
+        services.AddHttpClient<KotryTextbookProvider>();
+        if (string.Equals(llmOptions.Provider, "AzureOpenAI", StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddTransient<IStudyContentGenerator, AzureOpenAiStudyContentGenerator>();
+        }
+        else
+        {
+            services.AddSingleton<IStudyContentGenerator, MockStudyContentGenerator>();
+        }
+
+        services.AddSingleton(configuration.GetSection(KotryApiOptions.SectionName).Get<KotryApiOptions>() ?? new KotryApiOptions());
+        services.AddSingleton(configuration.GetSection(NcicApiOptions.SectionName).Get<NcicApiOptions>() ?? new NcicApiOptions());
+        services.AddSingleton(configuration.GetSection(NeisApiOptions.SectionName).Get<NeisApiOptions>() ?? new NeisApiOptions());
+
+        services.AddSingleton<IEducationCurriculumProvider, NcicCurriculumProvider>();
+        services.AddTransient<IEducationTextbookProvider, KotryTextbookProvider>();
+        services.AddSingleton<IEducationTextbookProvider, MockTextbookProvider>();
+        services.AddSingleton<IEducationSchoolContextProvider, NeisSchoolContextProvider>();
 
         services.AddHostedService<DocumentProcessingWorker>();
         return services;

@@ -18,4 +18,12 @@ public interface IStudyCoachService
         Stream content,
         CancellationToken cancellationToken);
     Task<IReadOnlyList<ProcessingJobModel>> GetProcessingJobsAsync(Guid workspaceId, CancellationToken cancellationToken);
+    Task<GeneratedStudyContentModel> GenerateContentAsync(
+        Guid workspaceId,
+        Guid examRangeId,
+        GeneratedContentType contentType,
+        CancellationToken cancellationToken);
+    Task<EducationMetadataBundleModel> CollectEducationMetadataAsync(
+        EducationMetadataQueryModel query,
+        CancellationToken cancellationToken);
 }

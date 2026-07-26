@@ -42,24 +42,29 @@
             <MudDivider Class="my-4" />
 
             <MudText Typo="Typo.subtitle2">Workspace 선택</MudText>
-            <MudTable Items="_workspaces" Dense="true" Hover="true" Class="mt-2">
-                <HeaderContent>
-                    <MudTh>이름</MudTh>
-                    <MudTh>생성일</MudTh>
-                    <MudTh></MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd>@context.Name</MudTd>
-                    <MudTd>@context.CreatedAtUtc.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</MudTd>
-                    <MudTd>
-                        <MudButton Variant="Variant.Outlined"
-                                   Color="@(IsSelectedWorkspace(context.Id) ? Color.Success : Color.Primary)"
-                                   OnClick="@(() => SelectWorkspaceAsync(context.Id))">
-                            @(IsSelectedWorkspace(context.Id) ? "선택됨" : "선택")
-                        </MudButton>
-                    </MudTd>
-                </RowTemplate>
-            </MudTable>
+            <MudStack Spacing="1" Class="mt-2">
+                @foreach (var workspace in _workspaces)
+                {
+                    <MudPaper Outlined="true" Class="pa-2">
+                        <MudGrid>
+                            <MudItem xs="12" md="6">
+                                <MudText Typo="Typo.subtitle2">@workspace.Name</MudText>
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudText Typo="Typo.caption">@workspace.CreatedAtUtc.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</MudText>
+                            </MudItem>
+                            <MudItem xs="12" md="3">
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="@(IsSelectedWorkspace(workspace.Id) ? Color.Success : Color.Primary)"
+                                           OnClick="@(() => SelectWorkspaceAsync(workspace.Id))"
+                                           FullWidth="true">
+                                    @(IsSelectedWorkspace(workspace.Id) ? "선택됨" : "선택")
+                                </MudButton>
+                            </MudItem>
+                        </MudGrid>
+                    </MudPaper>
+                }
+            </MudStack>
             <MudText Typo="Typo.caption" Class="mt-1">현재 Workspace 수: @_workspaces.Count</MudText>
         </MudPaper>
     </MudItem>
@@ -107,6 +112,123 @@
             @if (!string.IsNullOrWhiteSpace(_selectedFileName))
             {
                 <MudText Typo="Typo.caption" Class="mt-2">선택 파일: @_selectedFileName</MudText>
+            }
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+<MudGrid Class="mt-2">
+    <MudItem xs="12">
+        <MudPaper Class="pa-4">
+            <MudText Typo="Typo.h6">4) Stage C - 요약/퀴즈 생성</MudText>
+            <MudGrid Class="mt-2">
+                <MudItem xs="12" md="6">
+                    <MudSelect T="string" @bind-Value="_selectedExamRangeId" Variant="Variant.Outlined" Label="시험 범위 선택" FullWidth="true">
+                        @foreach (var examRange in _examRanges)
+                        {
+                            <MudSelectItem Value="@examRange.Id.ToString()">@($"{examRange.Subject} {examRange.StartPage}~{examRange.EndPage}")</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="GenerateSummaryAsync" Disabled="@(!CanGenerateContent)" FullWidth="true">요약 생성</MudButton>
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="GenerateQuizAsync" Disabled="@(!CanGenerateContent)" FullWidth="true">퀴즈 생성</MudButton>
+                </MudItem>
+            </MudGrid>
+            @if (!string.IsNullOrWhiteSpace(_generatedContent))
+            {
+                <MudDivider Class="my-3" />
+                <MudText Typo="Typo.caption">Provider: @_generatedProvider / Model: @_generatedModel</MudText>
+                <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">@_generatedContent</MudText>
+            }
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+<MudGrid Class="mt-2">
+    <MudItem xs="12">
+        <MudPaper Class="pa-4">
+            <MudText Typo="Typo.h6">5) 교육과정/교과서 메타데이터 통합 (NCIC + KOTRY + NEIS)</MudText>
+            <MudGrid Class="mt-2">
+                <MudItem xs="12" md="3">
+                    <MudSelect T="SchoolLevel" @bind-Value="_metadataSchoolLevel" Variant="Variant.Outlined" Label="학교급" FullWidth="true">
+                        <MudSelectItem Value="SchoolLevel.Elementary">초등</MudSelectItem>
+                        <MudSelectItem Value="SchoolLevel.Middle">중등</MudSelectItem>
+                        <MudSelectItem Value="SchoolLevel.High">고등</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" md="2">
+                    <MudNumericField T="int" @bind-Value="_metadataGrade" Variant="Variant.Outlined" Label="학년" FullWidth="true" />
+                </MudItem>
+                <MudItem xs="12" md="3">
+                    <MudNumericField T="int?" @bind-Value="_metadataBirthYear" Variant="Variant.Outlined" Label="출생년도(선택)" FullWidth="true" />
+                </MudItem>
+                <MudItem xs="12" md="2">
+                    <MudTextField @bind-Value="_metadataSubject" Variant="Variant.Outlined" Label="과목" FullWidth="true" />
+                </MudItem>
+                <MudItem xs="12" md="2">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CollectEducationMetadataAsync" FullWidth="true">통합 조회</MudButton>
+                </MudItem>
+            </MudGrid>
+
+            @if (_sourceStatuses.Count > 0)
+            {
+                <MudDivider Class="my-3" />
+                <MudText Typo="Typo.subtitle2">소스 상태</MudText>
+                <MudTable Items="_sourceStatuses" Dense="true" Hover="true" Class="mt-1">
+                    <HeaderContent>
+                        <MudTh>소스</MudTh>
+                        <MudTh>성공</MudTh>
+                        <MudTh>메시지</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Source</MudTd>
+                        <MudTd>@(context.Success ? "Yes" : "No")</MudTd>
+                        <MudTd>@context.Message</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+
+            @if (_curriculumResults.Count > 0)
+            {
+                <MudText Typo="Typo.subtitle2" Class="mt-3">교육과정</MudText>
+                <MudTable Items="_curriculumResults" Dense="true" Hover="true">
+                    <HeaderContent>
+                        <MudTh>개정</MudTh>
+                        <MudTh>표시명</MudTh>
+                        <MudTh>설명</MudTh>
+                        <MudTh>출처</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.RevisionCode</MudTd>
+                        <MudTd>@context.DisplayName</MudTd>
+                        <MudTd>@context.Description</MudTd>
+                        <MudTd>@context.Source</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            }
+
+            @if (_textbookResults.Count > 0)
+            {
+                <MudText Typo="Typo.subtitle2" Class="mt-3">교과서</MudText>
+                <MudTable Items="_textbookResults" Dense="true" Hover="true">
+                    <HeaderContent>
+                        <MudTh>과목</MudTh>
+                        <MudTh>출판사</MudTh>
+                        <MudTh>교과서명</MudTh>
+                        <MudTh>개정</MudTh>
+                        <MudTh>출처</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Subject</MudTd>
+                        <MudTd>@context.Publisher</MudTd>
+                        <MudTd>@context.Title</MudTd>
+                        <MudTd>@context.CurriculumRevision</MudTd>
+                        <MudTd>@context.Source</MudTd>
+                    </RowTemplate>
+                </MudTable>
             }
         </MudPaper>
     </MudItem>
@@ -173,6 +295,7 @@
 
     private string _workspaceName = string.Empty;
     private string _selectedWorkspaceId = string.Empty;
+    private string _selectedExamRangeId = string.Empty;
     private string _subject = string.Empty;
     private int _startPage = 1;
     private int _endPage = 1;
@@ -182,7 +305,18 @@
 
     private string? _infoMessage;
     private string? _errorMessage;
+    private string _generatedContent = string.Empty;
+    private string _generatedProvider = string.Empty;
+    private string _generatedModel = string.Empty;
+    private SchoolLevel _metadataSchoolLevel = SchoolLevel.Middle;
+    private int _metadataGrade = 1;
+    private int? _metadataBirthYear;
+    private string _metadataSubject = "과학";
+    private readonly List<CurriculumRevisionModel> _curriculumResults = [];
+    private readonly List<TextbookCatalogModel> _textbookResults = [];
+    private readonly List<SourceStatusModel> _sourceStatuses = [];
     private bool IsWorkspaceSelected => Guid.TryParse(_selectedWorkspaceId, out _);
+    private bool CanGenerateContent => IsWorkspaceSelected && Guid.TryParse(_selectedExamRangeId, out _);
     private string UploadAccept => _selectedDocumentType switch
     {
         DocumentType.TextbookPdf => ".pdf,application/pdf",
@@ -216,6 +350,9 @@
     private async Task SelectWorkspaceAsync(Guid workspaceId)
     {
         _selectedWorkspaceId = workspaceId.ToString();
+        _generatedContent = string.Empty;
+        _generatedProvider = string.Empty;
+        _generatedModel = string.Empty;
         await LoadWorkspaceDataAsync();
     }
 
@@ -276,6 +413,62 @@
         });
     }
 
+    private async Task GenerateSummaryAsync()
+    {
+        await GenerateContentAsync(GeneratedContentType.Summary);
+    }
+
+    private async Task GenerateQuizAsync()
+    {
+        await GenerateContentAsync(GeneratedContentType.Quiz);
+    }
+
+    private async Task GenerateContentAsync(GeneratedContentType contentType)
+    {
+        await RunWithErrorHandlingAsync(async () =>
+        {
+            var workspaceId = RequireWorkspaceSelection();
+            if (!Guid.TryParse(_selectedExamRangeId, out var examRangeId))
+            {
+                throw new InvalidOperationException("시험 범위를 먼저 선택하세요.");
+            }
+
+            var result = await StudyCoachService.GenerateContentAsync(
+                workspaceId,
+                examRangeId,
+                contentType,
+                CancellationToken.None);
+
+            _generatedContent = result.Content;
+            _generatedProvider = result.Provider;
+            _generatedModel = result.Model;
+            _infoMessage = $"{(contentType == GeneratedContentType.Summary ? "요약" : "퀴즈")} 생성이 완료되었습니다.";
+        });
+    }
+
+    private async Task CollectEducationMetadataAsync()
+    {
+        await RunWithErrorHandlingAsync(async () =>
+        {
+            var query = new EducationMetadataQueryModel(
+                Subject: _metadataSubject,
+                SchoolLevel: _metadataSchoolLevel,
+                Grade: _metadataGrade,
+                BirthYear: _metadataBirthYear,
+                SchoolName: null);
+
+            var result = await StudyCoachService.CollectEducationMetadataAsync(query, CancellationToken.None);
+
+            _curriculumResults.Clear();
+            _curriculumResults.AddRange(result.Curriculums);
+            _textbookResults.Clear();
+            _textbookResults.AddRange(result.Textbooks);
+            _sourceStatuses.Clear();
+            _sourceStatuses.AddRange(result.SourceStatuses);
+            _infoMessage = "교육과정/교과서 메타데이터 통합 조회가 완료되었습니다.";
+        });
+    }
+
     private async Task ReloadWorkspacesAsync()
     {
         _workspaces.Clear();
@@ -306,6 +499,15 @@
         _examRanges.AddRange(await StudyCoachService.GetExamRangesAsync(workspaceId, CancellationToken.None));
         _documents.AddRange(await StudyCoachService.GetDocumentsAsync(workspaceId, CancellationToken.None));
         _jobs.AddRange(await StudyCoachService.GetProcessingJobsAsync(workspaceId, CancellationToken.None));
+
+        if (_examRanges.Count > 0 && !Guid.TryParse(_selectedExamRangeId, out _))
+        {
+            _selectedExamRangeId = _examRanges[0].Id.ToString();
+        }
+        else if (_examRanges.Count == 0)
+        {
+            _selectedExamRangeId = string.Empty;
+        }
     }
 
     private Guid RequireWorkspaceSelection()

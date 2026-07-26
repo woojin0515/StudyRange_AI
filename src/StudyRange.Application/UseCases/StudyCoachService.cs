@@ -19,17 +19,23 @@ public sealed class StudyCoachService : IStudyCoachService
     private readonly IProcessingJobRepository _processingJobRepository;
     private readonly IFileStorage _fileStorage;
     private readonly IProcessingQueue _processingQueue;
+    private readonly IStudyContentGenerator _studyContentGenerator;
+    private readonly IEducationMetadataService _educationMetadataService;
 
     public StudyCoachService(
         IWorkspaceRepository workspaceRepository,
         IProcessingJobRepository processingJobRepository,
         IFileStorage fileStorage,
-        IProcessingQueue processingQueue)
+        IProcessingQueue processingQueue,
+        IStudyContentGenerator studyContentGenerator,
+        IEducationMetadataService educationMetadataService)
     {
         _workspaceRepository = workspaceRepository;
         _processingJobRepository = processingJobRepository;
         _fileStorage = fileStorage;
         _processingQueue = processingQueue;
+        _studyContentGenerator = studyContentGenerator;
+        _educationMetadataService = educationMetadataService;
     }
 
     public async Task<IReadOnlyList<WorkspaceModel>> GetWorkspacesAsync(CancellationToken cancellationToken)
@@ -127,6 +133,29 @@ public sealed class StudyCoachService : IStudyCoachService
                 j.StartedAtUtc,
                 j.CompletedAtUtc))
             .ToList();
+    }
+
+    public async Task<GeneratedStudyContentModel> GenerateContentAsync(
+        Guid workspaceId,
+        Guid examRangeId,
+        GeneratedContentType contentType,
+        CancellationToken cancellationToken)
+    {
+        var workspace = await GetWorkspaceOrThrowAsync(workspaceId, cancellationToken);
+        var examRange = workspace.ExamRanges.FirstOrDefault(x => x.Id == examRangeId);
+        if (examRange is null)
+        {
+            throw new InvalidOperationException("선택한 시험 범위를 찾을 수 없습니다.");
+        }
+
+        return await _studyContentGenerator.GenerateAsync(workspace, examRange, contentType, cancellationToken);
+    }
+
+    public Task<EducationMetadataBundleModel> CollectEducationMetadataAsync(
+        EducationMetadataQueryModel query,
+        CancellationToken cancellationToken)
+    {
+        return _educationMetadataService.CollectAsync(query, cancellationToken);
     }
 
     private async Task<Workspace> GetWorkspaceOrThrowAsync(Guid workspaceId, CancellationToken cancellationToken)
