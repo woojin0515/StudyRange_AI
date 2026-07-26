@@ -87,10 +87,15 @@ public sealed class StudyCoachService : IStudyCoachService
         Stream content,
         CancellationToken cancellationToken)
     {
-        ValidateUpload(documentType, originalFileName, contentType, fileSize);
+        await using var buffered = new MemoryStream();
+        await content.CopyToAsync(buffered, cancellationToken);
+        buffered.Position = 0;
+
+        ValidateUpload(documentType, originalFileName, contentType, fileSize, buffered);
+        buffered.Position = 0;
 
         var workspace = await GetWorkspaceOrThrowAsync(workspaceId, cancellationToken);
-        var storedPath = await _fileStorage.SaveAsync(content, originalFileName, cancellationToken);
+        var storedPath = await _fileStorage.SaveAsync(buffered, originalFileName, cancellationToken);
 
         var document = workspace.AddDocument(
             documentType: documentType,
@@ -155,7 +160,8 @@ public sealed class StudyCoachService : IStudyCoachService
         DocumentType documentType,
         string originalFileName,
         string contentType,
-        long fileSize)
+        long fileSize,
+        Stream content)
     {
         if (string.IsNullOrWhiteSpace(originalFileName))
         {
@@ -183,6 +189,16 @@ public sealed class StudyCoachService : IStudyCoachService
             throw new InvalidOperationException("파일 Content-Type을 확인할 수 없습니다.");
         }
 
+        if (content.Length == 0)
+        {
+            throw new InvalidOperationException("빈 파일은 업로드할 수 없습니다.");
+        }
+
+        if (content.Length > MaxUploadSizeBytes)
+        {
+            throw new InvalidOperationException("파일 크기는 25MB 이하여야 합니다.");
+        }
+
         switch (documentType)
         {
             case DocumentType.TextbookPdf:
@@ -194,6 +210,11 @@ public sealed class StudyCoachService : IStudyCoachService
                 if (!contentType.Equals("application/pdf", StringComparison.OrdinalIgnoreCase))
                 {
                     throw new InvalidOperationException("교과서 파일 형식이 올바르지 않습니다. PDF만 허용됩니다.");
+                }
+
+                if (!IsPdf(content))
+                {
+                    throw new InvalidOperationException("교과서 파일 시그니처가 올바르지 않습니다.");
                 }
                 break;
             case DocumentType.Worksheet:
@@ -207,9 +228,79 @@ public sealed class StudyCoachService : IStudyCoachService
                 {
                     throw new InvalidOperationException("학습지/노트 파일 형식이 올바르지 않습니다.");
                 }
+
+                if (!HasAllowedBinarySignature(content))
+                {
+                    throw new InvalidOperationException("학습지/노트 파일 시그니처가 올바르지 않습니다.");
+                }
                 break;
             default:
                 throw new InvalidOperationException("지원하지 않는 문서 유형입니다.");
+        }
+    }
+
+    private static bool HasAllowedBinarySignature(Stream content)
+    {
+        return IsPdf(content) || IsPng(content) || IsJpeg(content) || IsWebp(content);
+    }
+
+    private static bool IsPdf(Stream content)
+    {
+        return HasPrefix(content, [0x25, 0x50, 0x44, 0x46]); // %PDF
+    }
+
+    private static bool IsPng(Stream content)
+    {
+        return HasPrefix(content, [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
+    }
+
+    private static bool IsJpeg(Stream content)
+    {
+        return HasPrefix(content, [0xFF, 0xD8, 0xFF]);
+    }
+
+    private static bool IsWebp(Stream content)
+    {
+        const int requiredLength = 12;
+        if (content.Length < requiredLength)
+        {
+            return false;
+        }
+
+        var buffer = new byte[requiredLength];
+        var originalPosition = content.Position;
+        try
+        {
+            content.Position = 0;
+            _ = content.Read(buffer, 0, buffer.Length);
+            var riff = buffer[0] == 0x52 && buffer[1] == 0x49 && buffer[2] == 0x46 && buffer[3] == 0x46; // RIFF
+            var webp = buffer[8] == 0x57 && buffer[9] == 0x45 && buffer[10] == 0x42 && buffer[11] == 0x50; // WEBP
+            return riff && webp;
+        }
+        finally
+        {
+            content.Position = originalPosition;
+        }
+    }
+
+    private static bool HasPrefix(Stream content, ReadOnlySpan<byte> prefix)
+    {
+        if (content.Length < prefix.Length)
+        {
+            return false;
+        }
+
+        var buffer = new byte[prefix.Length];
+        var originalPosition = content.Position;
+        try
+        {
+            content.Position = 0;
+            _ = content.Read(buffer, 0, buffer.Length);
+            return buffer.AsSpan().SequenceEqual(prefix);
+        }
+        finally
+        {
+            content.Position = originalPosition;
         }
     }
 }
