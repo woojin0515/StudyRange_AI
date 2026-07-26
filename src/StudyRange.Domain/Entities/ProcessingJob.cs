@@ -45,4 +45,22 @@ public sealed class ProcessingJob
         CompletedAtUtc = completedAtUtc;
         ErrorMessage = errorMessage.Trim();
     }
+
+    public static ProcessingJob Rehydrate(
+        Guid id,
+        Guid workspaceId,
+        Guid documentId,
+        ProcessingStatus status,
+        string? errorMessage,
+        DateTimeOffset createdAtUtc,
+        DateTimeOffset? startedAtUtc,
+        DateTimeOffset? completedAtUtc)
+    {
+        var job = new ProcessingJob(id, workspaceId, documentId, createdAtUtc);
+        job.Status = status;
+        job.ErrorMessage = errorMessage;
+        job.StartedAtUtc = startedAtUtc;
+        job.CompletedAtUtc = completedAtUtc;
+        return job;
+    }
 }

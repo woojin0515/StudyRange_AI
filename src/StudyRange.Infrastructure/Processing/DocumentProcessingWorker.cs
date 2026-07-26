@@ -39,12 +39,14 @@ public sealed class DocumentProcessingWorker : BackgroundService
                 }
 
                 job.MarkProcessing(DateTimeOffset.UtcNow);
+                await _jobRepository.UpdateAsync(job, stoppingToken);
                 await Task.Delay(TimeSpan.FromSeconds(1), stoppingToken);
 
                 var workspace = await _workspaceRepository.GetByIdAsync(job.WorkspaceId, stoppingToken);
                 if (workspace is null)
                 {
                     job.MarkFailed("Workspace not found during processing.", DateTimeOffset.UtcNow);
+                    await _jobRepository.UpdateAsync(job, stoppingToken);
                     continue;
                 }
 
@@ -52,14 +54,17 @@ public sealed class DocumentProcessingWorker : BackgroundService
                 document.UpdateProcessing(
                     status: ProcessingStatus.Completed,
                     summary: $"MVP placeholder extraction complete for {document.OriginalFileName}");
+                await _workspaceRepository.UpdateAsync(workspace, stoppingToken);
 
                 job.MarkCompleted(DateTimeOffset.UtcNow);
+                await _jobRepository.UpdateAsync(job, stoppingToken);
             }
             catch (Exception ex)
             {
                 if (job is not null)
                 {
                     job.MarkFailed(ex.Message, DateTimeOffset.UtcNow);
+                    await _jobRepository.UpdateAsync(job, stoppingToken);
                 }
 
                 _logger.LogError(ex, "Unhandled error while processing a document job.");

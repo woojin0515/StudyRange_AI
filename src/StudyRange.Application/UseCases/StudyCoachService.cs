@@ -66,6 +66,7 @@ public sealed class StudyCoachService : IStudyCoachService
     {
         var workspace = await GetWorkspaceOrThrowAsync(workspaceId, cancellationToken);
         var examRange = workspace.AddExamRange(subject, startPage, endPage, DateTimeOffset.UtcNow);
+        await _workspaceRepository.UpdateAsync(workspace, cancellationToken);
         return MapExamRange(examRange);
     }
 
@@ -103,6 +104,7 @@ public sealed class StudyCoachService : IStudyCoachService
             storedPath: storedPath,
             sizeInBytes: fileSize,
             uploadedAtUtc: DateTimeOffset.UtcNow);
+        await _workspaceRepository.UpdateAsync(workspace, cancellationToken);
 
         var job = new ProcessingJob(Guid.NewGuid(), workspaceId, document.Id, DateTimeOffset.UtcNow);
         await _processingJobRepository.AddAsync(job, cancellationToken);

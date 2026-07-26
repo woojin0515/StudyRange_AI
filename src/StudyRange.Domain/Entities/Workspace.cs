@@ -58,4 +58,24 @@ public sealed class Workspace
         var document = _documents.FirstOrDefault(d => d.Id == documentId);
         return document ?? throw new InvalidOperationException("Document not found in workspace.");
     }
+
+    public void AttachExamRange(ExamRange examRange)
+    {
+        if (_examRanges.Any(r => r.Id == examRange.Id))
+        {
+            throw new InvalidOperationException("Exam range with same id already exists.");
+        }
+
+        _examRanges.Add(examRange);
+    }
+
+    public void AttachDocument(DocumentAsset document)
+    {
+        if (_documents.Any(d => d.Id == document.Id))
+        {
+            throw new InvalidOperationException("Document with same id already exists.");
+        }
+
+        _documents.Add(document);
+    }
 }

@@ -18,6 +18,12 @@ public sealed class InMemoryWorkspaceRepository : IWorkspaceRepository
         return Task.CompletedTask;
     }
 
+    public Task UpdateAsync(Workspace workspace, CancellationToken cancellationToken)
+    {
+        _store[workspace.Id] = workspace;
+        return Task.CompletedTask;
+    }
+
     public Task<Workspace?> GetByIdAsync(Guid workspaceId, CancellationToken cancellationToken)
     {
         _store.TryGetValue(workspaceId, out var workspace);

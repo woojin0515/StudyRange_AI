@@ -18,6 +18,12 @@ public sealed class InMemoryProcessingJobRepository : IProcessingJobRepository
         return Task.CompletedTask;
     }
 
+    public Task UpdateAsync(ProcessingJob job, CancellationToken cancellationToken)
+    {
+        _jobs[job.Id] = job;
+        return Task.CompletedTask;
+    }
+
     public Task<ProcessingJob?> GetByIdAsync(Guid jobId, CancellationToken cancellationToken)
     {
         _jobs.TryGetValue(jobId, out var job);

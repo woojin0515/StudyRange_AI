@@ -11,8 +11,10 @@ builder.Services.AddRazorComponents()
 builder.Services.AddMudServices();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddHealthChecks();
 
 var app = builder.Build();
+await app.InitializeInfrastructureAsync();
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -29,5 +31,6 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+app.MapHealthChecks("/health");
 
 app.Run();

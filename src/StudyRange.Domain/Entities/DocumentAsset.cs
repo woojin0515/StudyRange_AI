@@ -51,4 +51,28 @@ public sealed class DocumentAsset
         ProcessingStatus = status;
         ProcessingSummary = summary;
     }
+
+    public static DocumentAsset Rehydrate(
+        Guid id,
+        Guid workspaceId,
+        DocumentType documentType,
+        string originalFileName,
+        string storedPath,
+        long sizeInBytes,
+        DateTimeOffset uploadedAtUtc,
+        ProcessingStatus processingStatus,
+        string? processingSummary)
+    {
+        var document = new DocumentAsset(
+            id,
+            workspaceId,
+            documentType,
+            originalFileName,
+            storedPath,
+            sizeInBytes,
+            uploadedAtUtc);
+
+        document.UpdateProcessing(processingStatus, processingSummary);
+        return document;
+    }
 }
