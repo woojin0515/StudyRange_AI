@@ -27,7 +27,12 @@
             <MudText Typo="Typo.h6">1) Workspace 생성</MudText>
             <MudGrid Class="mt-2">
                 <MudItem xs="12" md="8">
-                    <MudTextField @bind-Value="_workspaceName" Label="Workspace 이름" Variant="Variant.Outlined" Immediate="true" FullWidth="true" />
+                    <MudTextField @bind-Value="_workspaceName"
+                                  Label="Workspace 이름"
+                                  HelperText="예:중간고사, 기말고사, 6월 모의고사"
+                                  Variant="Variant.Outlined"
+                                  Immediate="true"
+                                  FullWidth="true" />
                 </MudItem>
                 <MudItem xs="12" md="4">
                     <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateWorkspaceAsync" FullWidth="true">생성</MudButton>
@@ -37,10 +42,10 @@
             <MudDivider Class="my-4" />
 
             <MudText Typo="Typo.subtitle2">Workspace 선택</MudText>
-            <MudSelect T="string" Value="_selectedWorkspaceId" ValueChanged="OnWorkspaceChangedAsync" Variant="Variant.Outlined" Class="mt-2" FullWidth="true">
+            <MudSelect T="Guid?" @bind-Value="_selectedWorkspaceId" @bind-Value:after="LoadWorkspaceDataAfterSelectionAsync" Variant="Variant.Outlined" Class="mt-2" FullWidth="true">
                 @foreach (var workspace in _workspaces)
                 {
-                    <MudSelectItem Value="@workspace.Id.ToString()">@workspace.Name</MudSelectItem>
+                    <MudSelectItem Value="@((Guid?)workspace.Id)">@workspace.Name</MudSelectItem>
                 }
             </MudSelect>
         </MudPaper>
@@ -154,7 +159,7 @@
     private readonly List<ProcessingJobModel> _jobs = [];
 
     private string _workspaceName = string.Empty;
-    private string _selectedWorkspaceId = string.Empty;
+    private Guid? _selectedWorkspaceId;
     private string _subject = string.Empty;
     private int _startPage = 1;
     private int _endPage = 1;
@@ -164,7 +169,7 @@
 
     private string? _infoMessage;
     private string? _errorMessage;
-    private bool IsWorkspaceSelected => Guid.TryParse(_selectedWorkspaceId, out _);
+    private bool IsWorkspaceSelected => _selectedWorkspaceId.HasValue;
     private string UploadAccept => _selectedDocumentType switch
     {
         DocumentType.TextbookPdf => ".pdf,application/pdf",
@@ -177,7 +182,7 @@
         await ReloadWorkspacesAsync();
         if (_workspaces.Count > 0)
         {
-            _selectedWorkspaceId = _workspaces[0].Id.ToString();
+            _selectedWorkspaceId = _workspaces[0].Id;
             await LoadWorkspaceDataAsync();
         }
     }
@@ -188,16 +193,15 @@
         {
             var created = await StudyCoachService.CreateWorkspaceAsync(_workspaceName, CancellationToken.None);
             _workspaceName = string.Empty;
-            _selectedWorkspaceId = created.Id.ToString();
+            _selectedWorkspaceId = created.Id;
             await ReloadWorkspacesAsync();
             await LoadWorkspaceDataAsync();
             _infoMessage = "Workspace가 생성되었습니다.";
         });
     }
 
-    private async Task OnWorkspaceChangedAsync(string workspaceId)
+    private async Task LoadWorkspaceDataAfterSelectionAsync()
     {
-        _selectedWorkspaceId = workspaceId;
         await LoadWorkspaceDataAsync();
     }
 
@@ -275,11 +279,12 @@
         _documents.Clear();
         _jobs.Clear();
 
-        if (!Guid.TryParse(_selectedWorkspaceId, out var workspaceId))
+        if (!_selectedWorkspaceId.HasValue)
         {
             return;
         }
 
+        var workspaceId = _selectedWorkspaceId.Value;
         _examRanges.AddRange(await StudyCoachService.GetExamRangesAsync(workspaceId, CancellationToken.None));
         _documents.AddRange(await StudyCoachService.GetDocumentsAsync(workspaceId, CancellationToken.None));
         _jobs.AddRange(await StudyCoachService.GetProcessingJobsAsync(workspaceId, CancellationToken.None));
@@ -287,12 +292,12 @@
 
     private Guid RequireWorkspaceSelection()
     {
-        if (!Guid.TryParse(_selectedWorkspaceId, out var workspaceId))
+        if (!_selectedWorkspaceId.HasValue)
         {
             throw new InvalidOperationException("먼저 Workspace를 선택하세요.");
         }
 
-        return workspaceId;
+        return _selectedWorkspaceId.Value;
     }
 
     private async Task RunWithErrorHandlingAsync(Func<Task> action)
