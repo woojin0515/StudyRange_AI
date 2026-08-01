@@ -55,9 +55,24 @@ public sealed class PostgreSqlInfrastructureInitializer : IInfrastructureInitial
                                completed_at_utc TIMESTAMPTZ NULL
                            );
 
+                           CREATE TABLE IF NOT EXISTS generated_contents (
+                               id UUID PRIMARY KEY,
+                               workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+                               exam_range_id UUID NOT NULL,
+                               subject TEXT NOT NULL,
+                               start_page INTEGER NOT NULL,
+                               end_page INTEGER NOT NULL,
+                               content_type TEXT NOT NULL,
+                               content TEXT NOT NULL,
+                               provider TEXT NOT NULL,
+                               model TEXT NOT NULL,
+                               generated_at_utc TIMESTAMPTZ NOT NULL
+                           );
+
                            CREATE INDEX IF NOT EXISTS ix_exam_ranges_workspace_id ON exam_ranges(workspace_id);
                            CREATE INDEX IF NOT EXISTS ix_document_assets_workspace_id ON document_assets(workspace_id);
                            CREATE INDEX IF NOT EXISTS ix_processing_jobs_workspace_id ON processing_jobs(workspace_id);
+                           CREATE INDEX IF NOT EXISTS ix_generated_contents_workspace_id ON generated_contents(workspace_id);
                            """;
 
         await using var command = new NpgsqlCommand(sql, connection);

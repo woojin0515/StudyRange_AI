@@ -19,6 +19,7 @@ public interface IStudyCoachService
         CancellationToken cancellationToken);
     Task<IReadOnlyList<ProcessingJobModel>> GetProcessingJobsAsync(Guid workspaceId, CancellationToken cancellationToken);
     Task RetryProcessingJobAsync(Guid workspaceId, Guid jobId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<GeneratedContentHistoryModel>> GetGeneratedContentsAsync(Guid workspaceId, CancellationToken cancellationToken);
     Task<GeneratedStudyContentModel> GenerateContentAsync(
         Guid workspaceId,
         Guid examRangeId,

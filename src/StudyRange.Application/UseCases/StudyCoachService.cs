@@ -158,6 +158,25 @@ public sealed class StudyCoachService : IStudyCoachService
         await _processingQueue.EnqueueAsync(retryJob.Id, cancellationToken);
     }
 
+    public async Task<IReadOnlyList<GeneratedContentHistoryModel>> GetGeneratedContentsAsync(Guid workspaceId, CancellationToken cancellationToken)
+    {
+        var workspace = await GetWorkspaceOrThrowAsync(workspaceId, cancellationToken);
+        return workspace.GeneratedContents
+            .OrderByDescending(x => x.GeneratedAtUtc)
+            .Select(x => new GeneratedContentHistoryModel(
+                Id: x.Id,
+                ExamRangeId: x.ExamRangeId,
+                Subject: x.Subject,
+                StartPage: x.StartPage,
+                EndPage: x.EndPage,
+                ContentType: ParseContentType(x.ContentType),
+                Content: x.Content,
+                Provider: x.Provider,
+                Model: x.Model,
+                GeneratedAtUtc: x.GeneratedAtUtc))
+            .ToList();
+    }
+
     public async Task<GeneratedStudyContentModel> GenerateContentAsync(
         Guid workspaceId,
         Guid examRangeId,
@@ -171,7 +190,20 @@ public sealed class StudyCoachService : IStudyCoachService
             throw new InvalidOperationException("선택한 시험 범위를 찾을 수 없습니다.");
         }
 
-        return await _studyContentGenerator.GenerateAsync(workspace, examRange, contentType, cancellationToken);
+        var generated = await _studyContentGenerator.GenerateAsync(workspace, examRange, contentType, cancellationToken);
+        workspace.AddGeneratedContent(
+            examRangeId: examRange.Id,
+            subject: examRange.Subject,
+            startPage: examRange.Range.StartPage,
+            endPage: examRange.Range.EndPage,
+            contentType: contentType.ToString(),
+            content: generated.Content,
+            provider: generated.Provider,
+            model: generated.Model,
+            generatedAtUtc: generated.GeneratedAtUtc);
+        await _workspaceRepository.UpdateAsync(workspace, cancellationToken);
+
+        return generated;
     }
 
     public Task<EducationMetadataBundleModel> CollectEducationMetadataAsync(
@@ -356,5 +388,15 @@ public sealed class StudyCoachService : IStudyCoachService
         {
             content.Position = originalPosition;
         }
+    }
+
+    private static GeneratedContentType ParseContentType(string contentType)
+    {
+        if (Enum.TryParse<GeneratedContentType>(contentType, ignoreCase: true, out var parsed))
+        {
+            return parsed;
+        }
+
+        return GeneratedContentType.Summary;
     }
 }

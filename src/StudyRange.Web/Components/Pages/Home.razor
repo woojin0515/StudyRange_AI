@@ -39,8 +39,8 @@
             </MudItem>
             <MudItem xs="6" md="3">
                 <MudPaper Outlined="true" Class="summary-card">
-                    <MudText Typo="Typo.caption">처리 작업</MudText>
-                    <MudText Typo="Typo.h6">@_jobs.Count</MudText>
+                    <MudText Typo="Typo.caption">생성 이력</MudText>
+                    <MudText Typo="Typo.h6">@_generatedHistories.Count</MudText>
                 </MudPaper>
             </MudItem>
         </MudGrid>
@@ -196,6 +196,32 @@
             <MudPaper Outlined="true" Class="pa-3 mt-2 generated-content">
                 <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">@_generatedContent</MudText>
             </MudPaper>
+        }
+
+        @if (_generatedHistories.Count > 0)
+        {
+            <MudDivider Class="my-3" />
+            <MudText Typo="Typo.subtitle2">생성 이력</MudText>
+            <MudTable Items="_generatedHistories" Dense="true" Hover="true" Class="mt-2">
+                <HeaderContent>
+                    <MudTh>유형</MudTh>
+                    <MudTh>범위</MudTh>
+                    <MudTh>모델</MudTh>
+                    <MudTh>생성시각</MudTh>
+                    <MudTh>미리보기</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.ContentType</MudTd>
+                    <MudTd>@($"{context.Subject} {context.StartPage}~{context.EndPage}")</MudTd>
+                    <MudTd>@($"{context.Provider} / {context.Model}")</MudTd>
+                    <MudTd>@context.GeneratedAtUtc.LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss")</MudTd>
+                    <MudTd>
+                        <MudTooltip Text="@context.Content">
+                            <MudText Typo="Typo.caption" Class="job-error">확인</MudText>
+                        </MudTooltip>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
         }
     </MudPaper>
 
@@ -391,6 +417,7 @@
     private readonly List<ExamRangeModel> _examRanges = [];
     private readonly List<DocumentModel> _documents = [];
     private readonly List<ProcessingJobModel> _jobs = [];
+    private readonly List<GeneratedContentHistoryModel> _generatedHistories = [];
 
     private string _workspaceName = string.Empty;
     private string _selectedWorkspaceId = string.Empty;
@@ -614,6 +641,7 @@
         _examRanges.Clear();
         _documents.Clear();
         _jobs.Clear();
+        _generatedHistories.Clear();
 
         if (!Guid.TryParse(_selectedWorkspaceId, out var workspaceId))
         {
@@ -623,6 +651,7 @@
         _examRanges.AddRange(await StudyCoachService.GetExamRangesAsync(workspaceId, CancellationToken.None));
         _documents.AddRange(await StudyCoachService.GetDocumentsAsync(workspaceId, CancellationToken.None));
         _jobs.AddRange(await StudyCoachService.GetProcessingJobsAsync(workspaceId, CancellationToken.None));
+        _generatedHistories.AddRange(await StudyCoachService.GetGeneratedContentsAsync(workspaceId, CancellationToken.None));
 
         if (_examRanges.Count > 0 && !Guid.TryParse(_selectedExamRangeId, out _))
         {

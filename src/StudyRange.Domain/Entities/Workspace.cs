@@ -6,12 +6,14 @@ public sealed class Workspace
 {
     private readonly List<ExamRange> _examRanges = [];
     private readonly List<DocumentAsset> _documents = [];
+    private readonly List<GeneratedContentArtifact> _generatedContents = [];
 
     public Guid Id { get; }
     public string Name { get; private set; }
     public DateTimeOffset CreatedAtUtc { get; }
     public IReadOnlyList<ExamRange> ExamRanges => _examRanges;
     public IReadOnlyList<DocumentAsset> Documents => _documents;
+    public IReadOnlyList<GeneratedContentArtifact> GeneratedContents => _generatedContents;
 
     public Workspace(Guid id, string name, DateTimeOffset createdAtUtc)
     {
@@ -77,5 +79,43 @@ public sealed class Workspace
         }
 
         _documents.Add(document);
+    }
+
+    public GeneratedContentArtifact AddGeneratedContent(
+        Guid examRangeId,
+        string subject,
+        int startPage,
+        int endPage,
+        string contentType,
+        string content,
+        string provider,
+        string model,
+        DateTimeOffset generatedAtUtc)
+    {
+        var artifact = new GeneratedContentArtifact(
+            id: Guid.NewGuid(),
+            workspaceId: Id,
+            examRangeId: examRangeId,
+            subject: subject,
+            startPage: startPage,
+            endPage: endPage,
+            contentType: contentType,
+            content: content,
+            provider: provider,
+            model: model,
+            generatedAtUtc: generatedAtUtc);
+
+        _generatedContents.Add(artifact);
+        return artifact;
+    }
+
+    public void AttachGeneratedContent(GeneratedContentArtifact artifact)
+    {
+        if (_generatedContents.Any(x => x.Id == artifact.Id))
+        {
+            throw new InvalidOperationException("Generated content with same id already exists.");
+        }
+
+        _generatedContents.Add(artifact);
     }
 }

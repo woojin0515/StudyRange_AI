@@ -38,6 +38,18 @@ public sealed record GeneratedStudyContentModel(
     string Model,
     DateTimeOffset GeneratedAtUtc);
 
+public sealed record GeneratedContentHistoryModel(
+    Guid Id,
+    Guid ExamRangeId,
+    string Subject,
+    int StartPage,
+    int EndPage,
+    GeneratedContentType ContentType,
+    string Content,
+    string Provider,
+    string Model,
+    DateTimeOffset GeneratedAtUtc);
+
 public enum SchoolLevel
 {
     Elementary = 1,

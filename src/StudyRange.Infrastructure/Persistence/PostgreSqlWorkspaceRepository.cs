@@ -23,6 +23,7 @@ public sealed class PostgreSqlWorkspaceRepository : IWorkspaceRepository
         await InsertWorkspaceAsync(connection, transaction, workspace, cancellationToken);
         await InsertExamRangesAsync(connection, transaction, workspace.Id, workspace.ExamRanges, cancellationToken);
         await InsertDocumentsAsync(connection, transaction, workspace.Documents, cancellationToken);
+        await InsertGeneratedContentsAsync(connection, transaction, workspace.GeneratedContents, cancellationToken);
 
         await transaction.CommitAsync(cancellationToken);
     }
@@ -36,6 +37,7 @@ public sealed class PostgreSqlWorkspaceRepository : IWorkspaceRepository
         await UpdateWorkspaceAsync(connection, transaction, workspace, cancellationToken);
         await ReplaceExamRangesAsync(connection, transaction, workspace, cancellationToken);
         await ReplaceDocumentsAsync(connection, transaction, workspace, cancellationToken);
+        await ReplaceGeneratedContentsAsync(connection, transaction, workspace, cancellationToken);
 
         await transaction.CommitAsync(cancellationToken);
     }
@@ -67,6 +69,7 @@ public sealed class PostgreSqlWorkspaceRepository : IWorkspaceRepository
 
         await LoadExamRangesAsync(connection, workspace, cancellationToken);
         await LoadDocumentsAsync(connection, workspace, cancellationToken);
+        await LoadGeneratedContentsAsync(connection, workspace, cancellationToken);
         return workspace;
     }
 
@@ -98,6 +101,7 @@ public sealed class PostgreSqlWorkspaceRepository : IWorkspaceRepository
         {
             await LoadExamRangesAsync(connection, workspace, cancellationToken);
             await LoadDocumentsAsync(connection, workspace, cancellationToken);
+            await LoadGeneratedContentsAsync(connection, workspace, cancellationToken);
         }
 
         return result;
@@ -287,6 +291,89 @@ public sealed class PostgreSqlWorkspaceRepository : IWorkspaceRepository
                 processingStatus: (ProcessingStatus)reader.GetInt32(7),
                 processingSummary: reader.IsDBNull(8) ? null : reader.GetString(8));
             workspace.AttachDocument(document);
+        }
+        await reader.CloseAsync();
+    }
+
+    private static async Task ReplaceGeneratedContentsAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        Workspace workspace,
+        CancellationToken cancellationToken)
+    {
+        const string deleteSql = "DELETE FROM generated_contents WHERE workspace_id = @workspace_id";
+        await using (var deleteCommand = new NpgsqlCommand(deleteSql, connection))
+        {
+            deleteCommand.Transaction = transaction;
+            deleteCommand.Parameters.AddWithValue("workspace_id", workspace.Id);
+            await deleteCommand.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        await InsertGeneratedContentsAsync(connection, transaction, workspace.GeneratedContents, cancellationToken);
+    }
+
+    private static async Task InsertGeneratedContentsAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction transaction,
+        IReadOnlyList<GeneratedContentArtifact> contents,
+        CancellationToken cancellationToken)
+    {
+        const string insertSql = """
+                                 INSERT INTO generated_contents (
+                                     id, workspace_id, exam_range_id, subject, start_page, end_page, content_type, content, provider, model, generated_at_utc)
+                                 VALUES (
+                                     @id, @workspace_id, @exam_range_id, @subject, @start_page, @end_page, @content_type, @content, @provider, @model, @generated_at_utc)
+                                 """;
+
+        foreach (var item in contents)
+        {
+            await using var command = new NpgsqlCommand(insertSql, connection);
+            command.Transaction = transaction;
+            command.Parameters.AddWithValue("id", item.Id);
+            command.Parameters.AddWithValue("workspace_id", item.WorkspaceId);
+            command.Parameters.AddWithValue("exam_range_id", item.ExamRangeId);
+            command.Parameters.AddWithValue("subject", item.Subject);
+            command.Parameters.AddWithValue("start_page", item.StartPage);
+            command.Parameters.AddWithValue("end_page", item.EndPage);
+            command.Parameters.AddWithValue("content_type", item.ContentType);
+            command.Parameters.AddWithValue("content", item.Content);
+            command.Parameters.AddWithValue("provider", item.Provider);
+            command.Parameters.AddWithValue("model", item.Model);
+            command.Parameters.AddWithValue("generated_at_utc", item.GeneratedAtUtc);
+            await command.ExecuteNonQueryAsync(cancellationToken);
+        }
+    }
+
+    private static async Task LoadGeneratedContentsAsync(
+        NpgsqlConnection connection,
+        Workspace workspace,
+        CancellationToken cancellationToken)
+    {
+        const string sql = """
+                           SELECT id, workspace_id, exam_range_id, subject, start_page, end_page, content_type, content, provider, model, generated_at_utc
+                           FROM generated_contents
+                           WHERE workspace_id = @workspace_id
+                           ORDER BY generated_at_utc DESC
+                           """;
+        await using var command = new NpgsqlCommand(sql, connection);
+        command.Parameters.AddWithValue("workspace_id", workspace.Id);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            var item = new GeneratedContentArtifact(
+                id: reader.GetGuid(0),
+                workspaceId: reader.GetGuid(1),
+                examRangeId: reader.GetGuid(2),
+                subject: reader.GetString(3),
+                startPage: reader.GetInt32(4),
+                endPage: reader.GetInt32(5),
+                contentType: reader.GetString(6),
+                content: reader.GetString(7),
+                provider: reader.GetString(8),
+                model: reader.GetString(9),
+                generatedAtUtc: reader.GetFieldValue<DateTimeOffset>(10));
+            workspace.AttachGeneratedContent(item);
         }
         await reader.CloseAsync();
     }
