@@ -23,6 +23,7 @@ public static class DependencyInjection
         services.Configure<NeisApiOptions>(configuration.GetSection(NeisApiOptions.SectionName));
 
         var persistenceOptions = configuration.GetSection(PersistenceOptions.SectionName).Get<PersistenceOptions>() ?? new PersistenceOptions();
+        services.AddSingleton(persistenceOptions);
 
         if (string.Equals(persistenceOptions.Provider, "PostgreSql", StringComparison.OrdinalIgnoreCase))
         {
@@ -89,7 +90,8 @@ public static class DependencyInjection
         services.AddHostedService<DocumentProcessingWorker>();
         services.AddHealthChecks()
             .AddCheck<ConfigurationHealthCheck>("configuration")
-            .AddCheck<StorageHealthCheck>("storage");
+            .AddCheck<StorageHealthCheck>("storage")
+            .AddCheck<DatabaseHealthCheck>("database");
 
         return services;
     }
