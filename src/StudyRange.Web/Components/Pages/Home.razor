@@ -1,291 +1,338 @@
 ﻿@page "/"
 @inject IStudyCoachService StudyCoachService
 
-<PageTitle>StudyRange AI MVP</PageTitle>
+<PageTitle>StudyRange AI</PageTitle>
 
-<MudText Typo="Typo.h4" GutterBottom="true">StudyRange AI MVP Dashboard</MudText>
-<MudText Typo="Typo.body1" Class="mb-4">
-    MVP 범위: 워크스페이스, 시험 범위, 문서 업로드, 처리 상태 (LLM 제외)
-</MudText>
-<MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="RefreshCurrentWorkspaceAsync" Class="mb-3">
-    새로고침
-</MudButton>
+<MudStack Spacing="3" Class="home-shell">
+    <MudPaper Elevation="0" Outlined="true" Class="hero-panel">
+        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="hero-top">
+            <div>
+                <MudText Typo="Typo.h4">StudyRange AI</MudText>
+                <MudText Typo="Typo.body2" Class="text-secondary">
+                    워크스페이스부터 문서 처리, AI 생성, 교육 메타데이터 통합까지 한 화면에서 관리합니다.
+                </MudText>
+            </div>
+            <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.Refresh" OnClick="RefreshCurrentWorkspaceAsync">
+                새로고침
+            </MudButton>
+        </MudStack>
 
-@if (!string.IsNullOrWhiteSpace(_errorMessage))
-{
-    <MudAlert Severity="Severity.Error" Dense="true" Class="mb-3">@_errorMessage</MudAlert>
-}
+        <MudGrid Class="mt-3">
+            <MudItem xs="6" md="3">
+                <MudPaper Outlined="true" Class="summary-card">
+                    <MudText Typo="Typo.caption">워크스페이스</MudText>
+                    <MudText Typo="Typo.h6">@_workspaces.Count</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" md="3">
+                <MudPaper Outlined="true" Class="summary-card">
+                    <MudText Typo="Typo.caption">시험 범위</MudText>
+                    <MudText Typo="Typo.h6">@_examRanges.Count</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" md="3">
+                <MudPaper Outlined="true" Class="summary-card">
+                    <MudText Typo="Typo.caption">문서</MudText>
+                    <MudText Typo="Typo.h6">@_documents.Count</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" md="3">
+                <MudPaper Outlined="true" Class="summary-card">
+                    <MudText Typo="Typo.caption">처리 작업</MudText>
+                    <MudText Typo="Typo.h6">@_jobs.Count</MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
 
-@if (!string.IsNullOrWhiteSpace(_infoMessage))
-{
-    <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3">@_infoMessage</MudAlert>
-}
+    @if (!string.IsNullOrWhiteSpace(_errorMessage))
+    {
+        <MudAlert Severity="Severity.Error" Dense="true">@_errorMessage</MudAlert>
+    }
 
-<MudGrid>
-    <MudItem xs="12" md="6">
-        <MudPaper Class="pa-4">
-            <MudText Typo="Typo.h6">1) Workspace 생성</MudText>
-            <MudGrid Class="mt-2">
-                <MudItem xs="12" md="8">
-                    <MudTextField @bind-Value="_workspaceName"
-                                  Label="Workspace 이름"
-                                  HelperText="예:중간고사, 기말고사, 6월 모의고사"
-                                  Variant="Variant.Outlined"
-                                  Immediate="true"
-                                  FullWidth="true" />
-                </MudItem>
-                <MudItem xs="12" md="4">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CreateWorkspaceAsync" FullWidth="true">생성</MudButton>
-                </MudItem>
-            </MudGrid>
+    @if (!string.IsNullOrWhiteSpace(_infoMessage))
+    {
+        <MudAlert Severity="Severity.Info" Dense="true">@_infoMessage</MudAlert>
+    }
 
-            <MudDivider Class="my-4" />
+    <MudGrid>
+        <MudItem xs="12" lg="7">
+            <MudPaper Elevation="0" Outlined="true" Class="section-panel">
+                <MudText Typo="Typo.h6">1) Workspace</MudText>
+                <MudGrid Class="mt-2">
+                    <MudItem xs="12" md="8">
+                        <MudTextField @bind-Value="_workspaceName"
+                                      Label="Workspace 이름"
+                                      HelperText="예: 중간고사, 기말고사, 6월 모의고사"
+                                      Variant="Variant.Outlined"
+                                      Immediate="true"
+                                      FullWidth="true" />
+                    </MudItem>
+                    <MudItem xs="12" md="4" Class="align-end">
+                        <MudButton Variant="Variant.Filled"
+                                   Color="Color.Primary"
+                                   OnClick="CreateWorkspaceAsync"
+                                   Disabled="@string.IsNullOrWhiteSpace(_workspaceName)"
+                                   FullWidth="true">
+                            생성
+                        </MudButton>
+                    </MudItem>
+                </MudGrid>
 
-            <MudText Typo="Typo.subtitle2">Workspace 선택</MudText>
-            <MudStack Spacing="1" Class="mt-2">
-                @foreach (var workspace in _workspaces)
-                {
-                    <MudPaper Outlined="true" Class="pa-2">
-                        <MudGrid>
-                            <MudItem xs="12" md="6">
-                                <MudText Typo="Typo.subtitle2">@workspace.Name</MudText>
-                            </MudItem>
-                            <MudItem xs="12" md="3">
-                                <MudText Typo="Typo.caption">@workspace.CreatedAtUtc.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</MudText>
-                            </MudItem>
-                            <MudItem xs="12" md="3">
-                                <MudButton Variant="Variant.Outlined"
-                                           Color="@(IsSelectedWorkspace(workspace.Id) ? Color.Success : Color.Primary)"
-                                           OnClick="@(() => SelectWorkspaceAsync(workspace.Id))"
-                                           FullWidth="true">
-                                    @(IsSelectedWorkspace(workspace.Id) ? "선택됨" : "선택")
-                                </MudButton>
-                            </MudItem>
-                        </MudGrid>
-                    </MudPaper>
-                }
-            </MudStack>
-            <MudText Typo="Typo.caption" Class="mt-1">현재 Workspace 수: @_workspaces.Count</MudText>
-        </MudPaper>
-    </MudItem>
+                <MudDivider Class="my-4" />
 
-    <MudItem xs="12" md="6">
-        <MudPaper Class="pa-4">
-            <MudText Typo="Typo.h6">2) 시험 범위 등록</MudText>
-            <MudGrid Class="mt-2">
-                <MudItem xs="12" md="4">
-                    <MudTextField @bind-Value="_subject" Label="과목" Variant="Variant.Outlined" Immediate="true" FullWidth="true" />
-                </MudItem>
-                <MudItem xs="12" md="3">
-                    <MudNumericField T="int" @bind-Value="_startPage" Label="시작 페이지" Variant="Variant.Outlined" FullWidth="true" />
-                </MudItem>
-                <MudItem xs="12" md="3">
-                    <MudNumericField T="int" @bind-Value="_endPage" Label="끝 페이지" Variant="Variant.Outlined" FullWidth="true" />
-                </MudItem>
-                <MudItem xs="12" md="2">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddExamRangeAsync" Disabled="@(!IsWorkspaceSelected)" FullWidth="true">등록</MudButton>
-                </MudItem>
-            </MudGrid>
-        </MudPaper>
-    </MudItem>
-</MudGrid>
-
-<MudGrid Class="mt-2">
-    <MudItem xs="12" md="6">
-        <MudPaper Class="pa-4">
-            <MudText Typo="Typo.h6">3) 문서 업로드</MudText>
-            <MudGrid Class="mt-2">
-                <MudItem xs="12" md="4">
-                    <MudSelect T="DocumentType" @bind-Value="_selectedDocumentType" Variant="Variant.Outlined" Label="문서 종류" FullWidth="true">
-                        <MudSelectItem Value="DocumentType.TextbookPdf">Textbook PDF</MudSelectItem>
-                        <MudSelectItem Value="DocumentType.Worksheet">Worksheet</MudSelectItem>
-                        <MudSelectItem Value="DocumentType.HandwrittenNotes">Handwritten Notes</MudSelectItem>
-                    </MudSelect>
-                </MudItem>
-                <MudItem xs="12" md="5">
-                    <InputFile OnChange="OnFileSelected" class="form-control" accept="@UploadAccept" />
-                </MudItem>
-                <MudItem xs="12" md="3">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="UploadDocumentAsync" Disabled="@(!IsWorkspaceSelected)" FullWidth="true">업로드</MudButton>
-                </MudItem>
-            </MudGrid>
-            @if (!string.IsNullOrWhiteSpace(_selectedFileName))
-            {
-                <MudText Typo="Typo.caption" Class="mt-2">선택 파일: @_selectedFileName</MudText>
-            }
-        </MudPaper>
-    </MudItem>
-</MudGrid>
-
-<MudGrid Class="mt-2">
-    <MudItem xs="12">
-        <MudPaper Class="pa-4">
-            <MudText Typo="Typo.h6">4) Stage C - 요약/퀴즈 생성</MudText>
-            <MudGrid Class="mt-2">
-                <MudItem xs="12" md="6">
-                    <MudSelect T="string" @bind-Value="_selectedExamRangeId" Variant="Variant.Outlined" Label="시험 범위 선택" FullWidth="true">
-                        @foreach (var examRange in _examRanges)
+                <MudText Typo="Typo.subtitle2">Workspace 선택</MudText>
+                <MudStack Spacing="1" Class="mt-2 workspace-list">
+                    @if (_workspaces.Count == 0)
+                    {
+                        <MudText Typo="Typo.body2" Class="text-secondary">아직 생성된 Workspace가 없습니다.</MudText>
+                    }
+                    else
+                    {
+                        @foreach (var workspace in _workspaces)
                         {
-                            <MudSelectItem Value="@examRange.Id.ToString()">@($"{examRange.Subject} {examRange.StartPage}~{examRange.EndPage}")</MudSelectItem>
+                            <MudPaper Outlined="true" Class="pa-3 workspace-item">
+                                <MudGrid>
+                                    <MudItem xs="12" md="6">
+                                        <MudText Typo="Typo.subtitle2">@workspace.Name</MudText>
+                                    </MudItem>
+                                    <MudItem xs="12" md="3">
+                                        <MudText Typo="Typo.caption">@workspace.CreatedAtUtc.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</MudText>
+                                    </MudItem>
+                                    <MudItem xs="12" md="3">
+                                        <MudButton Variant="Variant.Outlined"
+                                                   Color="@(IsSelectedWorkspace(workspace.Id) ? Color.Success : Color.Primary)"
+                                                   OnClick="@(() => SelectWorkspaceAsync(workspace.Id))"
+                                                   FullWidth="true">
+                                            @(IsSelectedWorkspace(workspace.Id) ? "선택됨" : "선택")
+                                        </MudButton>
+                                    </MudItem>
+                                </MudGrid>
+                            </MudPaper>
                         }
-                    </MudSelect>
-                </MudItem>
-                <MudItem xs="12" md="3">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="GenerateSummaryAsync" Disabled="@(!CanGenerateContent)" FullWidth="true">요약 생성</MudButton>
-                </MudItem>
-                <MudItem xs="12" md="3">
-                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="GenerateQuizAsync" Disabled="@(!CanGenerateContent)" FullWidth="true">퀴즈 생성</MudButton>
-                </MudItem>
-            </MudGrid>
-            @if (!string.IsNullOrWhiteSpace(_generatedContent))
-            {
-                <MudDivider Class="my-3" />
-                <MudText Typo="Typo.caption">Provider: @_generatedProvider / Model: @_generatedModel</MudText>
+                    }
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" lg="5">
+            <MudStack Spacing="2">
+                <MudPaper Elevation="0" Outlined="true" Class="section-panel">
+                    <MudText Typo="Typo.h6">2) 시험 범위</MudText>
+                    <MudGrid Class="mt-2">
+                        <MudItem xs="12">
+                            <MudTextField @bind-Value="_subject" Label="과목" Variant="Variant.Outlined" Immediate="true" FullWidth="true" />
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudNumericField T="int" @bind-Value="_startPage" Label="시작 페이지" Variant="Variant.Outlined" FullWidth="true" />
+                        </MudItem>
+                        <MudItem xs="6">
+                            <MudNumericField T="int" @bind-Value="_endPage" Label="끝 페이지" Variant="Variant.Outlined" FullWidth="true" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddExamRangeAsync" Disabled="@(!IsWorkspaceSelected)" FullWidth="true">
+                                등록
+                            </MudButton>
+                        </MudItem>
+                    </MudGrid>
+                </MudPaper>
+
+                <MudPaper Elevation="0" Outlined="true" Class="section-panel">
+                    <MudText Typo="Typo.h6">3) 문서 업로드</MudText>
+                    <MudGrid Class="mt-2">
+                        <MudItem xs="12">
+                            <MudSelect T="DocumentType" @bind-Value="_selectedDocumentType" Variant="Variant.Outlined" Label="문서 종류" FullWidth="true">
+                                <MudSelectItem Value="DocumentType.TextbookPdf">Textbook PDF</MudSelectItem>
+                                <MudSelectItem Value="DocumentType.Worksheet">Worksheet</MudSelectItem>
+                                <MudSelectItem Value="DocumentType.HandwrittenNotes">Handwritten Notes</MudSelectItem>
+                            </MudSelect>
+                        </MudItem>
+                        <MudItem xs="12">
+                            <InputFile OnChange="OnFileSelected" class="form-control" accept="@UploadAccept" />
+                        </MudItem>
+                        <MudItem xs="12">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="UploadDocumentAsync" Disabled="@(!IsWorkspaceSelected)" FullWidth="true">
+                                업로드
+                            </MudButton>
+                        </MudItem>
+                    </MudGrid>
+                    @if (!string.IsNullOrWhiteSpace(_selectedFileName))
+                    {
+                        <MudText Typo="Typo.caption" Class="mt-2">선택 파일: @_selectedFileName</MudText>
+                    }
+                </MudPaper>
+            </MudStack>
+        </MudItem>
+    </MudGrid>
+
+    <MudPaper Elevation="0" Outlined="true" Class="section-panel">
+        <MudText Typo="Typo.h6">4) AI 요약/퀴즈 생성</MudText>
+        <MudGrid Class="mt-2">
+            <MudItem xs="12" md="6">
+                <MudSelect T="string" @bind-Value="_selectedExamRangeId" Variant="Variant.Outlined" Label="시험 범위 선택" FullWidth="true">
+                    @foreach (var examRange in _examRanges)
+                    {
+                        <MudSelectItem Value="@examRange.Id.ToString()">@($"{examRange.Subject} {examRange.StartPage}~{examRange.EndPage}")</MudSelectItem>
+                    }
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="GenerateSummaryAsync" Disabled="@(!CanGenerateContent)" FullWidth="true">
+                    요약 생성
+                </MudButton>
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="GenerateQuizAsync" Disabled="@(!CanGenerateContent)" FullWidth="true">
+                    퀴즈 생성
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+        @if (!string.IsNullOrWhiteSpace(_generatedContent))
+        {
+            <MudDivider Class="my-3" />
+            <MudText Typo="Typo.caption">Provider: @_generatedProvider / Model: @_generatedModel</MudText>
+            <MudPaper Outlined="true" Class="pa-3 mt-2 generated-content">
                 <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">@_generatedContent</MudText>
-            }
-        </MudPaper>
-    </MudItem>
-</MudGrid>
+            </MudPaper>
+        }
+    </MudPaper>
 
-<MudGrid Class="mt-2">
-    <MudItem xs="12">
-        <MudPaper Class="pa-4">
-            <MudText Typo="Typo.h6">5) 교육과정/교과서 메타데이터 통합 (NCIC + KOTRY + NEIS)</MudText>
-            <MudGrid Class="mt-2">
-                <MudItem xs="12" md="3">
-                    <MudSelect T="SchoolLevel" @bind-Value="_metadataSchoolLevel" Variant="Variant.Outlined" Label="학교급" FullWidth="true">
-                        <MudSelectItem Value="SchoolLevel.Elementary">초등</MudSelectItem>
-                        <MudSelectItem Value="SchoolLevel.Middle">중등</MudSelectItem>
-                        <MudSelectItem Value="SchoolLevel.High">고등</MudSelectItem>
-                    </MudSelect>
-                </MudItem>
-                <MudItem xs="12" md="2">
-                    <MudNumericField T="int" @bind-Value="_metadataGrade" Variant="Variant.Outlined" Label="학년" FullWidth="true" />
-                </MudItem>
-                <MudItem xs="12" md="3">
-                    <MudNumericField T="int?" @bind-Value="_metadataBirthYear" Variant="Variant.Outlined" Label="출생년도(선택)" FullWidth="true" />
-                </MudItem>
-                <MudItem xs="12" md="2">
-                    <MudTextField @bind-Value="_metadataSubject" Variant="Variant.Outlined" Label="과목" FullWidth="true" />
-                </MudItem>
-                <MudItem xs="12" md="2">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CollectEducationMetadataAsync" FullWidth="true">통합 조회</MudButton>
-                </MudItem>
-            </MudGrid>
+    <MudPaper Elevation="0" Outlined="true" Class="section-panel">
+        <MudText Typo="Typo.h6">5) 교육과정/교과서 메타데이터 (NCIC + KOTRY + NEIS)</MudText>
+        <MudGrid Class="mt-2">
+            <MudItem xs="12" md="3">
+                <MudSelect T="SchoolLevel" @bind-Value="_metadataSchoolLevel" Variant="Variant.Outlined" Label="학교급" FullWidth="true">
+                    <MudSelectItem Value="SchoolLevel.Elementary">초등</MudSelectItem>
+                    <MudSelectItem Value="SchoolLevel.Middle">중등</MudSelectItem>
+                    <MudSelectItem Value="SchoolLevel.High">고등</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="2">
+                <MudNumericField T="int" @bind-Value="_metadataGrade" Variant="Variant.Outlined" Label="학년" FullWidth="true" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudNumericField T="int?" @bind-Value="_metadataBirthYear" Variant="Variant.Outlined" Label="출생년도(선택)" FullWidth="true" />
+            </MudItem>
+            <MudItem xs="12" md="2">
+                <MudTextField @bind-Value="_metadataSubject" Variant="Variant.Outlined" Label="과목" FullWidth="true" />
+            </MudItem>
+            <MudItem xs="12" md="2">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CollectEducationMetadataAsync" FullWidth="true">통합 조회</MudButton>
+            </MudItem>
+        </MudGrid>
 
-            @if (_sourceStatuses.Count > 0)
-            {
-                <MudDivider Class="my-3" />
-                <MudText Typo="Typo.subtitle2">소스 상태</MudText>
-                <MudTable Items="_sourceStatuses" Dense="true" Hover="true" Class="mt-1">
-                    <HeaderContent>
-                        <MudTh>소스</MudTh>
-                        <MudTh>성공</MudTh>
-                        <MudTh>메시지</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd>@context.Source</MudTd>
-                        <MudTd>@(context.Success ? "Yes" : "No")</MudTd>
-                        <MudTd>@context.Message</MudTd>
-                    </RowTemplate>
-                </MudTable>
-            }
+        @if (_sourceStatuses.Count > 0)
+        {
+            <MudDivider Class="my-3" />
+            <MudText Typo="Typo.subtitle2">소스 상태</MudText>
+            <MudTable Items="_sourceStatuses" Dense="true" Hover="true" Class="mt-1">
+                <HeaderContent>
+                    <MudTh>소스</MudTh>
+                    <MudTh>성공</MudTh>
+                    <MudTh>메시지</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.Source</MudTd>
+                    <MudTd>@(context.Success ? "Yes" : "No")</MudTd>
+                    <MudTd>@context.Message</MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
 
-            @if (_curriculumResults.Count > 0)
-            {
-                <MudText Typo="Typo.subtitle2" Class="mt-3">교육과정</MudText>
-                <MudTable Items="_curriculumResults" Dense="true" Hover="true">
-                    <HeaderContent>
-                        <MudTh>개정</MudTh>
-                        <MudTh>표시명</MudTh>
-                        <MudTh>설명</MudTh>
-                        <MudTh>출처</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd>@context.RevisionCode</MudTd>
-                        <MudTd>@context.DisplayName</MudTd>
-                        <MudTd>@context.Description</MudTd>
-                        <MudTd>@context.Source</MudTd>
-                    </RowTemplate>
-                </MudTable>
-            }
+        @if (_curriculumResults.Count > 0)
+        {
+            <MudText Typo="Typo.subtitle2" Class="mt-3">교육과정</MudText>
+            <MudTable Items="_curriculumResults" Dense="true" Hover="true">
+                <HeaderContent>
+                    <MudTh>개정</MudTh>
+                    <MudTh>표시명</MudTh>
+                    <MudTh>설명</MudTh>
+                    <MudTh>출처</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.RevisionCode</MudTd>
+                    <MudTd>@context.DisplayName</MudTd>
+                    <MudTd>@context.Description</MudTd>
+                    <MudTd>@context.Source</MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
 
-            @if (_textbookResults.Count > 0)
-            {
-                <MudText Typo="Typo.subtitle2" Class="mt-3">교과서</MudText>
-                <MudTable Items="_textbookResults" Dense="true" Hover="true">
-                    <HeaderContent>
-                        <MudTh>과목</MudTh>
-                        <MudTh>출판사</MudTh>
-                        <MudTh>교과서명</MudTh>
-                        <MudTh>개정</MudTh>
-                        <MudTh>출처</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd>@context.Subject</MudTd>
-                        <MudTd>@context.Publisher</MudTd>
-                        <MudTd>@context.Title</MudTd>
-                        <MudTd>@context.CurriculumRevision</MudTd>
-                        <MudTd>@context.Source</MudTd>
-                    </RowTemplate>
-                </MudTable>
-            }
-        </MudPaper>
-    </MudItem>
-</MudGrid>
-
-<MudGrid Class="mt-4">
-    <MudItem xs="12" md="6">
-        <MudPaper Class="pa-4">
-            <MudText Typo="Typo.h6">Exam Ranges</MudText>
-            <MudTable Items="_examRanges" Dense="true" Hover="true" Class="mt-2">
+        @if (_textbookResults.Count > 0)
+        {
+            <MudText Typo="Typo.subtitle2" Class="mt-3">교과서</MudText>
+            <MudTable Items="_textbookResults" Dense="true" Hover="true">
                 <HeaderContent>
                     <MudTh>과목</MudTh>
-                    <MudTh>범위</MudTh>
-                    <MudTh>등록일</MudTh>
+                    <MudTh>출판사</MudTh>
+                    <MudTh>교과서명</MudTh>
+                    <MudTh>개정</MudTh>
+                    <MudTh>출처</MudTh>
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd>@context.Subject</MudTd>
-                    <MudTd>@context.StartPage ~ @context.EndPage</MudTd>
-                    <MudTd>@context.CreatedAtUtc.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</MudTd>
+                    <MudTd>@context.Publisher</MudTd>
+                    <MudTd>@context.Title</MudTd>
+                    <MudTd>@context.CurriculumRevision</MudTd>
+                    <MudTd>@context.Source</MudTd>
                 </RowTemplate>
             </MudTable>
-        </MudPaper>
-    </MudItem>
+        }
+    </MudPaper>
 
-    <MudItem xs="12" md="6">
-        <MudPaper Class="pa-4">
-            <MudText Typo="Typo.h6">Documents & Processing Jobs</MudText>
-            <MudTable Items="_documents" Dense="true" Hover="true" Class="mt-2">
-                <HeaderContent>
-                    <MudTh>파일명</MudTh>
-                    <MudTh>종류</MudTh>
-                    <MudTh>상태</MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd>@context.OriginalFileName</MudTd>
-                    <MudTd>@context.DocumentType</MudTd>
-                    <MudTd>@context.ProcessingStatus</MudTd>
-                </RowTemplate>
-            </MudTable>
+    <MudGrid>
+        <MudItem xs="12" md="6">
+            <MudPaper Elevation="0" Outlined="true" Class="section-panel">
+                <MudText Typo="Typo.h6">시험 범위 목록</MudText>
+                <MudTable Items="_examRanges" Dense="true" Hover="true" Class="mt-2">
+                    <HeaderContent>
+                        <MudTh>과목</MudTh>
+                        <MudTh>범위</MudTh>
+                        <MudTh>등록일</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Subject</MudTd>
+                        <MudTd>@context.StartPage ~ @context.EndPage</MudTd>
+                        <MudTd>@context.CreatedAtUtc.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudPaper>
+        </MudItem>
 
-            <MudDivider Class="my-3" />
+        <MudItem xs="12" md="6">
+            <MudPaper Elevation="0" Outlined="true" Class="section-panel">
+                <MudText Typo="Typo.h6">문서 / 처리 작업</MudText>
+                <MudTable Items="_documents" Dense="true" Hover="true" Class="mt-2">
+                    <HeaderContent>
+                        <MudTh>파일명</MudTh>
+                        <MudTh>종류</MudTh>
+                        <MudTh>상태</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.OriginalFileName</MudTd>
+                        <MudTd>@context.DocumentType</MudTd>
+                        <MudTd>@context.ProcessingStatus</MudTd>
+                    </RowTemplate>
+                </MudTable>
 
-            <MudTable Items="_jobs" Dense="true" Hover="true">
-                <HeaderContent>
-                    <MudTh>Job</MudTh>
-                    <MudTh>상태</MudTh>
-                    <MudTh>완료시각</MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd>@context.Id.ToString()[..8]</MudTd>
-                    <MudTd>@context.Status</MudTd>
-                    <MudTd>@(context.CompletedAtUtc?.LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss") ?? "-")</MudTd>
-                </RowTemplate>
-            </MudTable>
-        </MudPaper>
-    </MudItem>
-</MudGrid>
+                <MudDivider Class="my-3" />
+
+                <MudTable Items="_jobs" Dense="true" Hover="true">
+                    <HeaderContent>
+                        <MudTh>Job</MudTh>
+                        <MudTh>상태</MudTh>
+                        <MudTh>완료시각</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Id.ToString()[..8]</MudTd>
+                        <MudTd>@context.Status</MudTd>
+                        <MudTd>@(context.CompletedAtUtc?.LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss") ?? "-")</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudStack>
 
 @code {
     private readonly List<WorkspaceModel> _workspaces = [];

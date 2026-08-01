@@ -1,0 +1,63 @@
+.home-shell {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0.25rem 0 1.25rem;
+}
+
+.hero-panel,
+.section-panel {
+    border-radius: 16px;
+    background-color: #ffffff;
+}
+
+.hero-panel {
+    padding: 1.25rem;
+}
+
+.hero-top {
+    gap: 1rem;
+}
+
+.summary-card {
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    min-height: 88px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.section-panel {
+    padding: 1.1rem;
+}
+
+.workspace-list {
+    max-height: 360px;
+    overflow-y: auto;
+    padding-right: 0.2rem;
+}
+
+.workspace-item {
+    border-radius: 12px;
+}
+
+.generated-content {
+    max-height: 440px;
+    overflow-y: auto;
+}
+
+.align-end {
+    display: flex;
+    align-items: flex-end;
+}
+
+@media (max-width: 960px) {
+    .hero-panel,
+    .section-panel {
+        border-radius: 12px;
+    }
+
+    .workspace-list {
+        max-height: 280px;
+    }
+}

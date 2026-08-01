@@ -25,31 +25,31 @@ public sealed class AzureOpenAiStudyContentGenerator : IStudyContentGenerator
         GeneratedContentType contentType,
         CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(_options.Endpoint) ||
-            string.IsNullOrWhiteSpace(_options.ApiKey) ||
-            string.IsNullOrWhiteSpace(_options.Deployment))
+        if (string.IsNullOrWhiteSpace(_options.ApiKey))
         {
-            throw new InvalidOperationException("Azure OpenAI 설정이 누락되었습니다. Endpoint/ApiKey/Deployment를 확인하세요.");
+            throw new InvalidOperationException("LLM API 키가 설정되지 않았습니다. Llm:ApiKey를 확인하세요.");
+        }
+
+        if (string.IsNullOrWhiteSpace(_options.Model))
+        {
+            throw new InvalidOperationException("LLM 모델이 설정되지 않았습니다. Llm:Model을 확인하세요.");
         }
 
         var prompt = BuildPrompt(workspace, examRange, contentType);
-        var request = new
-        {
-            messages = new object[]
-            {
-                new { role = "system", content = "당신은 한국어 학습 코치입니다. 학생이 바로 공부를 시작할 수 있도록 구조화해서 답변하세요." },
-                new { role = "user", content = prompt }
-            },
-            temperature = 0.4,
-            max_tokens = 1200
-        };
-
-        var endpoint = _options.Endpoint.TrimEnd('/');
-        var uri = $"{endpoint}/openai/deployments/{_options.Deployment}/chat/completions?api-version={ApiVersion}";
+        var request = CreateRequestPayload(prompt);
+        var (uri, useAzureApiKeyHeader) = ResolveTarget();
         var json = JsonSerializer.Serialize(request);
 
         using var message = new HttpRequestMessage(HttpMethod.Post, uri);
-        message.Headers.Add("api-key", _options.ApiKey);
+        if (useAzureApiKeyHeader)
+        {
+            message.Headers.Add("api-key", _options.ApiKey);
+        }
+        else
+        {
+            message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _options.ApiKey);
+        }
+
         message.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
         message.Content = new StringContent(json, Encoding.UTF8, "application/json");
 
@@ -78,6 +78,47 @@ public sealed class AzureOpenAiStudyContentGenerator : IStudyContentGenerator
             Provider: _options.Provider,
             Model: _options.Model,
             GeneratedAtUtc: DateTimeOffset.UtcNow);
+    }
+
+    private (string Uri, bool UseAzureApiKeyHeader) ResolveTarget()
+    {
+        var endpoint = string.IsNullOrWhiteSpace(_options.Endpoint)
+            ? "https://api.openai.com/v1"
+            : _options.Endpoint.TrimEnd('/');
+
+        if (!string.IsNullOrWhiteSpace(_options.Endpoint) && !string.IsNullOrWhiteSpace(_options.Deployment))
+        {
+            return ($"{endpoint}/openai/deployments/{_options.Deployment}/chat/completions?api-version={ApiVersion}", true);
+        }
+
+        return ($"{endpoint}/chat/completions", false);
+    }
+
+    private object CreateRequestPayload(string prompt)
+    {
+        var messages = new object[]
+        {
+            new { role = "system", content = "당신은 한국어 학습 코치입니다. 학생이 바로 공부를 시작할 수 있도록 구조화해서 답변하세요." },
+            new { role = "user", content = prompt }
+        };
+
+        if (!string.IsNullOrWhiteSpace(_options.Endpoint) && !string.IsNullOrWhiteSpace(_options.Deployment))
+        {
+            return new
+            {
+                messages,
+                temperature = 0.4,
+                max_tokens = 1200
+            };
+        }
+
+        return new
+        {
+            model = _options.Model,
+            messages,
+            temperature = 0.4,
+            max_tokens = 1200
+        };
     }
 
     private static string BuildPrompt(Workspace workspace, ExamRange examRange, GeneratedContentType contentType)
