@@ -154,9 +154,9 @@
                     <MudGrid Class="mt-2">
                         <MudItem xs="12">
                             <MudSelect T="DocumentType" @bind-Value="_selectedDocumentType" Variant="Variant.Outlined" Label="문서 종류" FullWidth="true">
-                                <MudSelectItem Value="DocumentType.TextbookPdf">Textbook PDF</MudSelectItem>
-                                <MudSelectItem Value="DocumentType.Worksheet">Worksheet</MudSelectItem>
-                                <MudSelectItem Value="DocumentType.HandwrittenNotes">Handwritten Notes</MudSelectItem>
+                                <MudSelectItem Value="@DocumentType.TextbookPdf">Textbook PDF</MudSelectItem>
+                                <MudSelectItem Value="@DocumentType.Worksheet">Worksheet</MudSelectItem>
+                                <MudSelectItem Value="@DocumentType.HandwrittenNotes">Handwritten Notes</MudSelectItem>
                             </MudSelect>
                         </MudItem>
                         <MudItem xs="12">
@@ -283,24 +283,11 @@
         <MudText Typo="Typo.h6">5) 교육과정/교과서 메타데이터 (NCIC + KOTRY + NEIS)</MudText>
         <MudGrid Class="mt-2">
             <MudItem xs="12" md="3">
-                <MudText Typo="Typo.caption" Class="text-secondary">학교급</MudText>
-                <MudStack Row="true" Spacing="1" Class="mt-1">
-                    <MudButton Variant="@(MetadataSchoolLevel == SchoolLevel.Elementary ? Variant.Filled : Variant.Outlined)"
-                               Color="Color.Primary"
-                               OnClick="@(() => SetMetadataSchoolLevel(SchoolLevel.Elementary))">
-                        초등
-                    </MudButton>
-                    <MudButton Variant="@(MetadataSchoolLevel == SchoolLevel.Middle ? Variant.Filled : Variant.Outlined)"
-                               Color="Color.Primary"
-                               OnClick="@(() => SetMetadataSchoolLevel(SchoolLevel.Middle))">
-                        중등
-                    </MudButton>
-                    <MudButton Variant="@(MetadataSchoolLevel == SchoolLevel.High ? Variant.Filled : Variant.Outlined)"
-                               Color="Color.Primary"
-                               OnClick="@(() => SetMetadataSchoolLevel(SchoolLevel.High))">
-                        고등
-                    </MudButton>
-                </MudStack>
+                <MudSelect T="SchoolLevel" @bind-Value="MetadataSchoolLevel" Variant="Variant.Outlined" Label="학교급" FullWidth="true">
+                    <MudSelectItem Value="@SchoolLevel.Elementary">초등</MudSelectItem>
+                    <MudSelectItem Value="@SchoolLevel.Middle">중등</MudSelectItem>
+                    <MudSelectItem Value="@SchoolLevel.High">고등</MudSelectItem>
+                </MudSelect>
             </MudItem>
             <MudItem xs="12" md="2">
                 <MudNumericField T="int"
@@ -320,7 +307,7 @@
             <MudItem xs="12" md="3">
                 <MudTextField @bind-Value="_metadataSubject" Variant="Variant.Outlined" Label="과목" FullWidth="true" />
             </MudItem>
-            <MudItem xs="12" md="12" Class="align-end mt-2">
+            <MudItem xs="12" md="2" Class="align-end">
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CollectEducationMetadataAsync" Disabled="@_isBusy" FullWidth="true">통합 조회</MudButton>
             </MudItem>
         </MudGrid>
@@ -772,10 +759,8 @@
         }
     }
 
-    private void SetMetadataSchoolLevel(SchoolLevel schoolLevel)
-    {
-        MetadataSchoolLevel = schoolLevel;
-    }
+    private bool HasActiveProcessingJobs =>
+        _jobs.Any(x => x.Status is ProcessingStatus.Queued or ProcessingStatus.Processing);
 
     private string ResolveMetadataSubject()
     {
@@ -912,7 +897,7 @@
             {
                 await InvokeAsync(async () =>
                 {
-                    if (IsWorkspaceSelected)
+                    if (IsWorkspaceSelected && HasActiveProcessingJobs)
                     {
                         await LoadWorkspaceDataAsync();
                         StateHasChanged();
