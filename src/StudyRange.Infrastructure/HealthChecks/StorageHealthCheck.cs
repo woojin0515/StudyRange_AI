@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Options;
 using StudyRange.Infrastructure.Storage;
 
 namespace StudyRange.Infrastructure.HealthChecks;
@@ -7,9 +8,9 @@ public sealed class StorageHealthCheck : IHealthCheck
 {
     private readonly StorageOptions _storageOptions;
 
-    public StorageHealthCheck(StorageOptions storageOptions)
+    public StorageHealthCheck(IOptions<StorageOptions> storageOptions)
     {
-        _storageOptions = storageOptions;
+        _storageOptions = storageOptions.Value;
     }
 
     public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)
