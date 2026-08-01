@@ -228,6 +228,7 @@ public sealed class StudyCoachService : IStudyCoachService
         EducationMetadataQueryModel query,
         CancellationToken cancellationToken)
     {
+        ValidateEducationMetadataQuery(query);
         return _educationMetadataService.CollectAsync(query, cancellationToken);
     }
 
@@ -341,6 +342,29 @@ public sealed class StudyCoachService : IStudyCoachService
             default:
                 throw new InvalidOperationException("지원하지 않는 문서 유형입니다.");
         }
+    }
+
+    private static void ValidateEducationMetadataQuery(EducationMetadataQueryModel query)
+    {
+        if (string.IsNullOrWhiteSpace(query.Subject))
+        {
+            throw new InvalidOperationException("과목은 비어 있을 수 없습니다.");
+        }
+
+        if (query.Grade < 1 || query.Grade > GetMaxGradeBySchoolLevel(query.SchoolLevel))
+        {
+            throw new InvalidOperationException("학교급에 맞는 학년을 입력하세요.");
+        }
+    }
+
+    private static int GetMaxGradeBySchoolLevel(SchoolLevel schoolLevel)
+    {
+        return schoolLevel switch
+        {
+            SchoolLevel.Elementary => 6,
+            SchoolLevel.Middle or SchoolLevel.High => 3,
+            _ => 3
+        };
     }
 
     private static bool HasAllowedBinarySignature(Stream content)

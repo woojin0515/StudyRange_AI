@@ -290,7 +290,13 @@
                 </MudSelect>
             </MudItem>
             <MudItem xs="12" md="2">
-                <MudNumericField T="int" @bind-Value="_metadataGrade" Variant="Variant.Outlined" Label="학년" FullWidth="true" />
+                <MudNumericField T="int"
+                                 @bind-Value="_metadataGrade"
+                                 Variant="Variant.Outlined"
+                                 Label="학년"
+                                 Min="1"
+                                 Max="@GetMaxGradeBySchoolLevel(_metadataSchoolLevel)"
+                                 FullWidth="true" />
             </MudItem>
             <MudItem xs="12" md="2">
                 <MudNumericField T="int?" @bind-Value="_metadataBirthYear" Variant="Variant.Outlined" Label="출생년도(선택)" FullWidth="true" />
@@ -678,6 +684,7 @@
     {
         await RunWithErrorHandlingAsync(async () =>
         {
+            _metadataGrade = Math.Clamp(_metadataGrade, 1, GetMaxGradeBySchoolLevel(_metadataSchoolLevel));
             var query = new EducationMetadataQueryModel(
                 Subject: _metadataSubject,
                 SchoolLevel: _metadataSchoolLevel,
@@ -697,6 +704,16 @@
             _sourceStatuses.AddRange(result.SourceStatuses);
             _infoMessage = "교육과정/교과서 메타데이터 통합 조회가 완료되었습니다.";
         });
+    }
+
+    private static int GetMaxGradeBySchoolLevel(SchoolLevel schoolLevel)
+    {
+        return schoolLevel switch
+        {
+            SchoolLevel.Elementary => 6,
+            SchoolLevel.Middle or SchoolLevel.High => 3,
+            _ => 3
+        };
     }
 
     private async Task ReloadWorkspacesAsync()
