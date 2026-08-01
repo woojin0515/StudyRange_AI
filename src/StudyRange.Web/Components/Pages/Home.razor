@@ -210,13 +210,16 @@
             <MudItem xs="12" md="2">
                 <MudNumericField T="int" @bind-Value="_metadataGrade" Variant="Variant.Outlined" Label="학년" FullWidth="true" />
             </MudItem>
-            <MudItem xs="12" md="3">
+            <MudItem xs="12" md="2">
                 <MudNumericField T="int?" @bind-Value="_metadataBirthYear" Variant="Variant.Outlined" Label="출생년도(선택)" FullWidth="true" />
             </MudItem>
             <MudItem xs="12" md="2">
+                <MudTextField @bind-Value="_metadataSchoolName" Variant="Variant.Outlined" Label="학교명(선택)" FullWidth="true" />
+            </MudItem>
+            <MudItem xs="12" md="1">
                 <MudTextField @bind-Value="_metadataSubject" Variant="Variant.Outlined" Label="과목" FullWidth="true" />
             </MudItem>
-            <MudItem xs="12" md="2">
+            <MudItem xs="12" md="2" Class="align-end">
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CollectEducationMetadataAsync" FullWidth="true">통합 조회</MudButton>
             </MudItem>
         </MudGrid>
@@ -274,6 +277,23 @@
                     <MudTd>@context.Publisher</MudTd>
                     <MudTd>@context.Title</MudTd>
                     <MudTd>@context.CurriculumRevision</MudTd>
+                    <MudTd>@context.Source</MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+
+        @if (_schoolFactResults.Count > 0)
+        {
+            <MudText Typo="Typo.subtitle2" Class="mt-3">학교 맥락</MudText>
+            <MudTable Items="_schoolFactResults" Dense="true" Hover="true">
+                <HeaderContent>
+                    <MudTh>키</MudTh>
+                    <MudTh>값</MudTh>
+                    <MudTh>출처</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.Key</MudTd>
+                    <MudTd>@context.Value</MudTd>
                     <MudTd>@context.Source</MudTd>
                 </RowTemplate>
             </MudTable>
@@ -358,9 +378,11 @@
     private SchoolLevel _metadataSchoolLevel = SchoolLevel.Middle;
     private int _metadataGrade = 1;
     private int? _metadataBirthYear;
+    private string _metadataSchoolName = string.Empty;
     private string _metadataSubject = "과학";
     private readonly List<CurriculumRevisionModel> _curriculumResults = [];
     private readonly List<TextbookCatalogModel> _textbookResults = [];
+    private readonly List<SchoolContextFactModel> _schoolFactResults = [];
     private readonly List<SourceStatusModel> _sourceStatuses = [];
     private bool IsWorkspaceSelected => Guid.TryParse(_selectedWorkspaceId, out _);
     private bool CanGenerateContent => IsWorkspaceSelected && Guid.TryParse(_selectedExamRangeId, out _);
@@ -502,7 +524,7 @@
                 SchoolLevel: _metadataSchoolLevel,
                 Grade: _metadataGrade,
                 BirthYear: _metadataBirthYear,
-                SchoolName: null);
+                SchoolName: string.IsNullOrWhiteSpace(_metadataSchoolName) ? null : _metadataSchoolName.Trim());
 
             var result = await StudyCoachService.CollectEducationMetadataAsync(query, CancellationToken.None);
 
@@ -510,6 +532,8 @@
             _curriculumResults.AddRange(result.Curriculums);
             _textbookResults.Clear();
             _textbookResults.AddRange(result.Textbooks);
+            _schoolFactResults.Clear();
+            _schoolFactResults.AddRange(result.SchoolFacts);
             _sourceStatuses.Clear();
             _sourceStatuses.AddRange(result.SourceStatuses);
             _infoMessage = "교육과정/교과서 메타데이터 통합 조회가 완료되었습니다.";
