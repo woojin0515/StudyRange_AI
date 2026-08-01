@@ -405,6 +405,16 @@
                 </MudButton>
             </MudItem>
         </MudGrid>
+        @if (!string.IsNullOrWhiteSpace(_resolvedCurriculumRevision) || !string.IsNullOrWhiteSpace(_resolvedTextbookPublisher) || !string.IsNullOrWhiteSpace(_resolvedTextbookTitle))
+        {
+            <MudPaper Outlined="true" Class="pa-2 mt-2">
+                <MudText Typo="Typo.caption">
+                    반영값: 개정년도=@(_resolvedCurriculumRevision.Length == 0 ? "-" : _resolvedCurriculumRevision),
+                    출판사=@(_resolvedTextbookPublisher.Length == 0 ? "-" : _resolvedTextbookPublisher),
+                    교과서명=@(_resolvedTextbookTitle.Length == 0 ? "-" : _resolvedTextbookTitle)
+                </MudText>
+            </MudPaper>
+        }
     </MudPaper>
 
     <MudGrid>
@@ -731,12 +741,19 @@
         });
     }
 
-    private Task ApplyRecommendedMetadataAsync()
+    private async Task ApplyRecommendedMetadataAsync()
     {
-        ApplyRecommendedMetadataFromResults();
-        _infoMessage = "조회 결과를 확정 메타데이터에 반영했습니다. 필요하면 직접 수정하세요.";
-        _errorMessage = null;
-        return Task.CompletedTask;
+        await RunWithErrorHandlingAsync(() =>
+        {
+            if (_curriculumResults.Count == 0 && _textbookResults.Count == 0)
+            {
+                throw new InvalidOperationException("반영할 조회 결과가 없습니다. 먼저 통합 조회를 실행하세요.");
+            }
+
+            ApplyRecommendedMetadataFromResults();
+            _infoMessage = "조회 결과를 확정 메타데이터에 반영했습니다. 필요하면 직접 수정하세요.";
+            return Task.CompletedTask;
+        });
     }
 
     private static int GetMaxGradeBySchoolLevel(SchoolLevel schoolLevel)
