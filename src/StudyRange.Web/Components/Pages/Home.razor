@@ -13,7 +13,7 @@
                     워크스페이스부터 문서 처리, AI 생성, 교육 메타데이터 통합까지 한 화면에서 관리합니다.
                 </MudText>
             </div>
-            <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.Refresh" OnClick="RefreshCurrentWorkspaceAsync">
+            <MudButton Variant="Variant.Outlined" Color="Color.Default" StartIcon="@Icons.Material.Filled.Refresh" OnClick="RefreshCurrentWorkspaceAsync" Disabled="@_isBusy">
                 새로고침
             </MudButton>
         </MudStack>
@@ -73,7 +73,7 @@
                         <MudButton Variant="Variant.Filled"
                                    Color="Color.Primary"
                                    OnClick="CreateWorkspaceAsync"
-                                   Disabled="@string.IsNullOrWhiteSpace(_workspaceName)"
+                                   Disabled="@(_isBusy || string.IsNullOrWhiteSpace(_workspaceName))"
                                    FullWidth="true">
                             생성
                         </MudButton>
@@ -104,6 +104,7 @@
                                         <MudButton Variant="Variant.Outlined"
                                                    Color="@(IsSelectedWorkspace(workspace.Id) ? Color.Success : Color.Primary)"
                                                    OnClick="@(() => SelectWorkspaceAsync(workspace.Id))"
+                                                   Disabled="@_isBusy"
                                                    FullWidth="true">
                                             @(IsSelectedWorkspace(workspace.Id) ? "선택됨" : "선택")
                                         </MudButton>
@@ -131,7 +132,7 @@
                             <MudNumericField T="int" @bind-Value="_endPage" Label="끝 페이지" Variant="Variant.Outlined" FullWidth="true" />
                         </MudItem>
                         <MudItem xs="12">
-                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddExamRangeAsync" Disabled="@(!IsWorkspaceSelected)" FullWidth="true">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddExamRangeAsync" Disabled="@(_isBusy || !IsWorkspaceSelected)" FullWidth="true">
                                 등록
                             </MudButton>
                         </MudItem>
@@ -152,7 +153,7 @@
                             <InputFile OnChange="OnFileSelected" class="form-control" accept="@UploadAccept" />
                         </MudItem>
                         <MudItem xs="12">
-                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="UploadDocumentAsync" Disabled="@(!IsWorkspaceSelected)" FullWidth="true">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="UploadDocumentAsync" Disabled="@(_isBusy || !IsWorkspaceSelected)" FullWidth="true">
                                 업로드
                             </MudButton>
                         </MudItem>
@@ -178,12 +179,12 @@
                 </MudSelect>
             </MudItem>
             <MudItem xs="12" md="3">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="GenerateSummaryAsync" Disabled="@(!CanGenerateContent)" FullWidth="true">
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="GenerateSummaryAsync" Disabled="@(_isBusy || !CanGenerateContent)" FullWidth="true">
                     요약 생성
                 </MudButton>
             </MudItem>
             <MudItem xs="12" md="3">
-                <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="GenerateQuizAsync" Disabled="@(!CanGenerateContent)" FullWidth="true">
+                <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="GenerateQuizAsync" Disabled="@(_isBusy || !CanGenerateContent)" FullWidth="true">
                     퀴즈 생성
                 </MudButton>
             </MudItem>
@@ -221,7 +222,7 @@
                 <MudTextField @bind-Value="_metadataSubject" Variant="Variant.Outlined" Label="과목" FullWidth="true" />
             </MudItem>
             <MudItem xs="12" md="2" Class="align-end">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CollectEducationMetadataAsync" FullWidth="true">통합 조회</MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CollectEducationMetadataAsync" Disabled="@_isBusy" FullWidth="true">통합 조회</MudButton>
             </MudItem>
         </MudGrid>
 
@@ -373,6 +374,7 @@
 
     private string? _infoMessage;
     private string? _errorMessage;
+    private bool _isBusy;
     private string _generatedContent = string.Empty;
     private string _generatedProvider = string.Empty;
     private string _generatedModel = string.Empty;
@@ -634,6 +636,12 @@
 
     private async Task RunWithErrorHandlingAsync(Func<Task> action)
     {
+        if (_isBusy)
+        {
+            return;
+        }
+
+        _isBusy = true;
         _errorMessage = null;
         _infoMessage = null;
 
@@ -644,6 +652,10 @@
         catch (Exception ex)
         {
             _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _isBusy = false;
         }
     }
 
