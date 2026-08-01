@@ -282,12 +282,25 @@
     <MudPaper Elevation="0" Outlined="true" Class="section-panel">
         <MudText Typo="Typo.h6">5) 교육과정/교과서 메타데이터 (NCIC + KOTRY + NEIS)</MudText>
         <MudGrid Class="mt-2">
-            <MudItem xs="12" md="2">
-                <MudSelect T="SchoolLevel" @bind-Value="MetadataSchoolLevel" Variant="Variant.Outlined" Label="학교급" FullWidth="true">
-                    <MudSelectItem Value="@SchoolLevel.Elementary">초등</MudSelectItem>
-                    <MudSelectItem Value="@SchoolLevel.Middle">중등</MudSelectItem>
-                    <MudSelectItem Value="@SchoolLevel.High">고등</MudSelectItem>
-                </MudSelect>
+            <MudItem xs="12" md="3">
+                <MudText Typo="Typo.caption" Class="text-secondary">학교급</MudText>
+                <MudStack Row="true" Spacing="1" Class="mt-1">
+                    <MudButton Variant="@(MetadataSchoolLevel == SchoolLevel.Elementary ? Variant.Filled : Variant.Outlined)"
+                               Color="Color.Primary"
+                               OnClick="@(() => SetMetadataSchoolLevel(SchoolLevel.Elementary))">
+                        초등
+                    </MudButton>
+                    <MudButton Variant="@(MetadataSchoolLevel == SchoolLevel.Middle ? Variant.Filled : Variant.Outlined)"
+                               Color="Color.Primary"
+                               OnClick="@(() => SetMetadataSchoolLevel(SchoolLevel.Middle))">
+                        중등
+                    </MudButton>
+                    <MudButton Variant="@(MetadataSchoolLevel == SchoolLevel.High ? Variant.Filled : Variant.Outlined)"
+                               Color="Color.Primary"
+                               OnClick="@(() => SetMetadataSchoolLevel(SchoolLevel.High))">
+                        고등
+                    </MudButton>
+                </MudStack>
             </MudItem>
             <MudItem xs="12" md="2">
                 <MudNumericField T="int"
@@ -301,13 +314,13 @@
             <MudItem xs="12" md="2">
                 <MudNumericField T="int?" @bind-Value="_metadataBirthYear" Variant="Variant.Outlined" Label="출생년도(선택)" FullWidth="true" />
             </MudItem>
-            <MudItem xs="12" md="3">
+            <MudItem xs="12" md="2">
                 <MudTextField @bind-Value="_metadataSchoolName" Variant="Variant.Outlined" Label="학교명(선택)" FullWidth="true" />
             </MudItem>
             <MudItem xs="12" md="3">
                 <MudTextField @bind-Value="_metadataSubject" Variant="Variant.Outlined" Label="과목" FullWidth="true" />
             </MudItem>
-            <MudItem xs="12" md="2" Class="align-end">
+            <MudItem xs="12" md="12" Class="align-end mt-2">
                 <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CollectEducationMetadataAsync" Disabled="@_isBusy" FullWidth="true">통합 조회</MudButton>
             </MudItem>
         </MudGrid>
@@ -757,6 +770,11 @@
             _metadataSchoolLevel = value;
             _metadataGrade = Math.Clamp(_metadataGrade, 1, GetMaxGradeBySchoolLevel(_metadataSchoolLevel));
         }
+    }
+
+    private void SetMetadataSchoolLevel(SchoolLevel schoolLevel)
+    {
+        MetadataSchoolLevel = schoolLevel;
     }
 
     private string ResolveMetadataSubject()
