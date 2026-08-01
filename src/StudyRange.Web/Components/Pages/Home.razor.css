@@ -46,6 +46,11 @@
     overflow-y: auto;
 }
 
+.job-error {
+    color: #d32f2f;
+    font-weight: 600;
+}
+
 .align-end {
     display: flex;
     align-items: flex-end;

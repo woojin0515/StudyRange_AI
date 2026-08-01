@@ -344,12 +344,25 @@
                         <MudTh>Job</MudTh>
                         <MudTh>상태</MudTh>
                         <MudTh>완료시각</MudTh>
+                        <MudTh>오류</MudTh>
                         <MudTh>동작</MudTh>
                     </HeaderContent>
                     <RowTemplate>
                         <MudTd>@context.Id.ToString()[..8]</MudTd>
                         <MudTd>@context.Status</MudTd>
                         <MudTd>@(context.CompletedAtUtc?.LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss") ?? "-")</MudTd>
+                        <MudTd>
+                            @if (string.IsNullOrWhiteSpace(context.ErrorMessage))
+                            {
+                                <MudText Typo="Typo.caption" Class="text-secondary">-</MudText>
+                            }
+                            else
+                            {
+                                <MudTooltip Text="@context.ErrorMessage">
+                                    <MudText Typo="Typo.caption" Class="job-error">확인</MudText>
+                                </MudTooltip>
+                            }
+                        </MudTd>
                         <MudTd>
                             @if (context.Status == ProcessingStatus.Failed)
                             {
