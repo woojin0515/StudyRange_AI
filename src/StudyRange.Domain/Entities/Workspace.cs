@@ -118,4 +118,13 @@ public sealed class Workspace
 
         _generatedContents.Add(artifact);
     }
+
+    public void RemoveGeneratedContent(Guid generatedContentId)
+    {
+        var removed = _generatedContents.RemoveAll(x => x.Id == generatedContentId);
+        if (removed == 0)
+        {
+            throw new InvalidOperationException("Generated content not found in workspace.");
+        }
+    }
 }

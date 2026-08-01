@@ -229,13 +229,22 @@
                         </MudTooltip>
                     </MudTd>
                     <MudTd>
-                        <MudButton Variant="Variant.Outlined"
-                                   Size="Size.Small"
-                                   Color="Color.Primary"
-                                   Disabled="@_isBusy"
-                                   OnClick="@(() => ApplyGeneratedHistory(context.Id))">
-                            불러오기
-                        </MudButton>
+                        <MudStack Row="true" Spacing="1">
+                            <MudButton Variant="Variant.Outlined"
+                                       Size="Size.Small"
+                                       Color="Color.Primary"
+                                       Disabled="@_isBusy"
+                                       OnClick="@(() => ApplyGeneratedHistory(context.Id))">
+                                불러오기
+                            </MudButton>
+                            <MudButton Variant="Variant.Outlined"
+                                       Size="Size.Small"
+                                       Color="Color.Error"
+                                       Disabled="@_isBusy"
+                                       OnClick="@(() => DeleteGeneratedHistoryAsync(context.Id))">
+                                삭제
+                            </MudButton>
+                        </MudStack>
                     </MudTd>
                 </RowTemplate>
             </MudTable>
@@ -673,6 +682,17 @@
         _infoMessage = "생성 이력을 화면에 불러왔습니다.";
         _errorMessage = null;
         return Task.CompletedTask;
+    }
+
+    private async Task DeleteGeneratedHistoryAsync(Guid historyId)
+    {
+        await RunWithErrorHandlingAsync(async () =>
+        {
+            var workspaceId = RequireWorkspaceSelection();
+            await StudyCoachService.DeleteGeneratedContentAsync(workspaceId, historyId, CancellationToken.None);
+            await LoadWorkspaceDataAsync();
+            _infoMessage = "생성 이력을 삭제했습니다.";
+        });
     }
 
     private async Task LoadWorkspaceDataAsync()

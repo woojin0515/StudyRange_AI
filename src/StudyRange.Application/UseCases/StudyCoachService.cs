@@ -177,6 +177,13 @@ public sealed class StudyCoachService : IStudyCoachService
             .ToList();
     }
 
+    public async Task DeleteGeneratedContentAsync(Guid workspaceId, Guid generatedContentId, CancellationToken cancellationToken)
+    {
+        var workspace = await GetWorkspaceOrThrowAsync(workspaceId, cancellationToken);
+        workspace.RemoveGeneratedContent(generatedContentId);
+        await _workspaceRepository.UpdateAsync(workspace, cancellationToken);
+    }
+
     public async Task<GeneratedStudyContentModel> GenerateContentAsync(
         Guid workspaceId,
         Guid examRangeId,
