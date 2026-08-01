@@ -2,7 +2,11 @@ using StudyRange.Web.Components;
 using MudBlazor.Services;
 using StudyRange.Application;
 using StudyRange.Infrastructure;
+using Microsoft.Extensions.Options;
 using System.Text.Json;
+using StudyRange.Infrastructure.Integrations;
+using StudyRange.Infrastructure.Persistence;
+using StudyRange.Infrastructure.Storage;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,31 +35,90 @@ app.UseAntiforgery();
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
-app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+app.MapGet("/health", async (IServiceProvider serviceProvider) =>
 {
-    ResponseWriter = async (context, report) =>
-    {
-        context.Response.ContentType = "application/json; charset=utf-8";
-        var response = new
-        {
-            status = report.Status.ToString(),
-            totalDurationMs = report.TotalDuration.TotalMilliseconds,
-            entries = report.Entries.ToDictionary(
-                x => x.Key,
-                x => new
-                {
-                    status = x.Value.Status.ToString(),
-                    description = x.Value.Description,
-                    durationMs = x.Value.Duration.TotalMilliseconds,
-                    error = x.Value.Exception?.Message,
-                    data = x.Value.Data.ToDictionary(
-                        kv => kv.Key,
-                        kv => kv.Value?.ToString())
-                })
-        };
+    var llmOptions = serviceProvider.GetRequiredService<IOptions<LlmOptions>>().Value;
+    var storageOptions = serviceProvider.GetRequiredService<IOptions<StorageOptions>>().Value;
+    var persistenceOptions = serviceProvider.GetRequiredService<IOptions<PersistenceOptions>>().Value;
 
-        await context.Response.WriteAsync(JsonSerializer.Serialize(response));
+    bool storageWritable;
+    string? storageError = null;
+    try
+    {
+        Directory.CreateDirectory(storageOptions.RootDirectory);
+        var probePath = Path.Combine(storageOptions.RootDirectory, $".healthcheck-{Guid.NewGuid():N}.tmp");
+        await File.WriteAllTextAsync(probePath, "ok");
+        File.Delete(probePath);
+        storageWritable = true;
     }
-});
+    catch (Exception ex)
+    {
+        storageWritable = false;
+        storageError = ex.Message;
+    }
+
+    bool databaseOk = true;
+    string databaseMessage;
+    if (string.Equals(persistenceOptions.Provider, "PostgreSql", StringComparison.OrdinalIgnoreCase))
+    {
+        var connectionFactory = serviceProvider.GetService<PostgreSqlConnectionFactory>();
+        if (connectionFactory is null)
+        {
+            databaseOk = false;
+            databaseMessage = "PostgreSQL connection factory is not registered.";
+        }
+        else
+        {
+            try
+            {
+                await using var connection = connectionFactory.Create();
+                await connection.OpenAsync();
+                await using var command = connection.CreateCommand();
+                command.CommandText = "SELECT 1";
+                _ = await command.ExecuteScalarAsync();
+                databaseMessage = "PostgreSQL connectivity is healthy.";
+            }
+            catch (Exception ex)
+            {
+                databaseOk = false;
+                databaseMessage = ex.Message;
+            }
+        }
+    }
+    else
+    {
+        databaseMessage = "InMemory persistence is enabled.";
+    }
+
+    var llmConfigured = !string.IsNullOrWhiteSpace(llmOptions.ApiKey) && !string.IsNullOrWhiteSpace(llmOptions.Model);
+    var ok = storageWritable && databaseOk && llmConfigured;
+    var response = new
+    {
+        status = ok ? "Healthy" : "Degraded",
+        entries = new
+        {
+            configuration = new
+            {
+                llmProvider = llmOptions.Provider,
+                llmModel = llmOptions.Model,
+                llmConfigured
+            },
+            storage = new
+            {
+                rootDirectory = storageOptions.RootDirectory,
+                writable = storageWritable,
+                error = storageError
+            },
+            database = new
+            {
+                provider = persistenceOptions.Provider,
+                ok = databaseOk,
+                message = databaseMessage
+            }
+        }
+    };
+
+    return Results.Json(response, statusCode: ok ? StatusCodes.Status200OK : StatusCodes.Status503ServiceUnavailable);
+}).AllowAnonymous();
 
 app.Run();
