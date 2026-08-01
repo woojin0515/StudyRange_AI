@@ -209,6 +209,7 @@
                     <MudTh>모델</MudTh>
                     <MudTh>생성시각</MudTh>
                     <MudTh>미리보기</MudTh>
+                    <MudTh>동작</MudTh>
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd>@context.ContentType</MudTd>
@@ -219,6 +220,15 @@
                         <MudTooltip Text="@context.Content">
                             <MudText Typo="Typo.caption" Class="job-error">확인</MudText>
                         </MudTooltip>
+                    </MudTd>
+                    <MudTd>
+                        <MudButton Variant="Variant.Outlined"
+                                   Size="Size.Small"
+                                   Color="Color.Primary"
+                                   Disabled="@_isBusy"
+                                   OnClick="@(() => ApplyGeneratedHistory(context.Id))">
+                            불러오기
+                        </MudButton>
                     </MudTd>
                 </RowTemplate>
             </MudTable>
@@ -631,6 +641,24 @@
             await LoadWorkspaceDataAsync();
             _infoMessage = "실패 작업을 재처리 큐에 등록했습니다.";
         });
+    }
+
+    private Task ApplyGeneratedHistory(Guid historyId)
+    {
+        var selected = _generatedHistories.FirstOrDefault(x => x.Id == historyId);
+        if (selected is null)
+        {
+            _errorMessage = "선택한 생성 이력을 찾을 수 없습니다.";
+            return Task.CompletedTask;
+        }
+
+        _generatedContent = selected.Content;
+        _generatedProvider = selected.Provider;
+        _generatedModel = selected.Model;
+        _selectedExamRangeId = selected.ExamRangeId.ToString();
+        _infoMessage = "생성 이력을 화면에 불러왔습니다.";
+        _errorMessage = null;
+        return Task.CompletedTask;
     }
 
     private async Task LoadWorkspaceDataAsync()
