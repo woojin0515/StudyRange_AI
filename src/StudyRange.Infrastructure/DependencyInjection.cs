@@ -16,6 +16,7 @@ public static class DependencyInjection
         services.Configure<PersistenceOptions>(configuration.GetSection(PersistenceOptions.SectionName));
         services.Configure<StorageOptions>(configuration.GetSection(StorageOptions.SectionName));
         services.Configure<LlmOptions>(configuration.GetSection(LlmOptions.SectionName));
+        services.Configure<OcrOptions>(configuration.GetSection(OcrOptions.SectionName));
         services.Configure<KotryApiOptions>(configuration.GetSection(KotryApiOptions.SectionName));
         services.Configure<NcicApiOptions>(configuration.GetSection(NcicApiOptions.SectionName));
         services.Configure<NeisApiOptions>(configuration.GetSection(NeisApiOptions.SectionName));
@@ -50,7 +51,9 @@ public static class DependencyInjection
         });
 
         var llmOptions = configuration.GetSection(LlmOptions.SectionName).Get<LlmOptions>() ?? new LlmOptions();
+        var ocrOptions = configuration.GetSection(OcrOptions.SectionName).Get<OcrOptions>() ?? new OcrOptions();
         services.AddSingleton(llmOptions);
+        services.AddSingleton(ocrOptions);
         services.AddHttpClient<AzureOpenAiStudyContentGenerator>();
         services.AddHttpClient<KotryTextbookProvider>();
         services.AddHttpClient<NeisSchoolContextProvider>();
