@@ -153,11 +153,24 @@
                     <MudText Typo="Typo.h6">3) 문서 업로드</MudText>
                     <MudGrid Class="mt-2">
                         <MudItem xs="12">
-                            <MudSelect T="DocumentType" @bind-Value="_selectedDocumentType" Variant="Variant.Outlined" Label="문서 종류" FullWidth="true">
-                                <MudSelectItem Value="@DocumentType.TextbookPdf">Textbook PDF</MudSelectItem>
-                                <MudSelectItem Value="@DocumentType.Worksheet">Worksheet</MudSelectItem>
-                                <MudSelectItem Value="@DocumentType.HandwrittenNotes">Handwritten Notes</MudSelectItem>
-                            </MudSelect>
+                            <MudText Typo="Typo.caption" Class="text-secondary">문서 종류</MudText>
+                            <MudStack Row="true" Spacing="1" Class="mt-1">
+                                <MudButton Variant="@(_selectedDocumentType == DocumentType.TextbookPdf ? Variant.Filled : Variant.Outlined)"
+                                           Color="Color.Primary"
+                                           OnClick="@(() => _selectedDocumentType = DocumentType.TextbookPdf)">
+                                    Textbook PDF
+                                </MudButton>
+                                <MudButton Variant="@(_selectedDocumentType == DocumentType.Worksheet ? Variant.Filled : Variant.Outlined)"
+                                           Color="Color.Primary"
+                                           OnClick="@(() => _selectedDocumentType = DocumentType.Worksheet)">
+                                    Worksheet
+                                </MudButton>
+                                <MudButton Variant="@(_selectedDocumentType == DocumentType.HandwrittenNotes ? Variant.Filled : Variant.Outlined)"
+                                           Color="Color.Primary"
+                                           OnClick="@(() => _selectedDocumentType = DocumentType.HandwrittenNotes)">
+                                    Handwritten Notes
+                                </MudButton>
+                            </MudStack>
                         </MudItem>
                         <MudItem xs="12">
                             <InputFile OnChange="OnFileSelected" class="form-control" accept="@UploadAccept" />
@@ -178,109 +191,7 @@
     </MudGrid>
 
     <MudPaper Elevation="0" Outlined="true" Class="section-panel">
-        <MudText Typo="Typo.h6">4) AI 요약/퀴즈 생성</MudText>
-        <MudGrid Class="mt-2">
-            <MudItem xs="12" md="6">
-                <MudSelect T="string" @bind-Value="_selectedExamRangeId" Variant="Variant.Outlined" Label="시험 범위 선택" FullWidth="true">
-                    @foreach (var examRange in _examRanges)
-                    {
-                        <MudSelectItem Value="@examRange.Id.ToString()">@($"{examRange.Subject} {examRange.StartPage}~{examRange.EndPage}")</MudSelectItem>
-                    }
-                </MudSelect>
-            </MudItem>
-            <MudItem xs="12" md="3">
-                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="GenerateSummaryAsync" Disabled="@(_isBusy || !CanGenerateContent)" FullWidth="true">
-                    요약 생성
-                </MudButton>
-            </MudItem>
-            <MudItem xs="12" md="3">
-                <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="GenerateQuizAsync" Disabled="@(_isBusy || !CanGenerateContent)" FullWidth="true">
-                    퀴즈 생성
-                </MudButton>
-            </MudItem>
-        </MudGrid>
-        @if (!string.IsNullOrWhiteSpace(_generatedContent))
-        {
-            <MudDivider Class="my-3" />
-            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
-                <MudText Typo="Typo.caption">Provider: @_generatedProvider / Model: @_generatedModel</MudText>
-                <MudButton Variant="Variant.Outlined"
-                           Size="Size.Small"
-                           Color="Color.Primary"
-                           Disabled="@_isBusy"
-                           StartIcon="@Icons.Material.Filled.ContentCopy"
-                           OnClick="@(() => CopyToClipboardAsync(_generatedContent))">
-                    복사
-                </MudButton>
-            </MudStack>
-            <MudPaper Outlined="true" Class="pa-3 mt-2 generated-content">
-                <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">@_generatedContent</MudText>
-            </MudPaper>
-        }
-
-        @if (_generatedHistories.Count > 0)
-        {
-            <MudDivider Class="my-3" />
-            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
-                <MudText Typo="Typo.subtitle2">생성 이력</MudText>
-                <MudSelect T="string" @bind-Value="_historyFilter" Variant="Variant.Outlined" Dense="true" Margin="Margin.Dense" Style="min-width: 160px;">
-                    <MudSelectItem Value="@("All")">전체</MudSelectItem>
-                    <MudSelectItem Value="@("Summary")">요약</MudSelectItem>
-                    <MudSelectItem Value="@("Quiz")">퀴즈</MudSelectItem>
-                </MudSelect>
-            </MudStack>
-            <MudTable Items="FilteredGeneratedHistories" Dense="true" Hover="true" Class="mt-2">
-                <HeaderContent>
-                    <MudTh>유형</MudTh>
-                    <MudTh>범위</MudTh>
-                    <MudTh>모델</MudTh>
-                    <MudTh>생성시각</MudTh>
-                    <MudTh>미리보기</MudTh>
-                    <MudTh>동작</MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd>@context.ContentType</MudTd>
-                    <MudTd>@($"{context.Subject} {context.StartPage}~{context.EndPage}")</MudTd>
-                    <MudTd>@($"{context.Provider} / {context.Model}")</MudTd>
-                    <MudTd>@context.GeneratedAtUtc.LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss")</MudTd>
-                    <MudTd>
-                        <MudTooltip Text="@context.Content">
-                            <MudText Typo="Typo.caption" Class="job-error">확인</MudText>
-                        </MudTooltip>
-                    </MudTd>
-                    <MudTd>
-                        <MudStack Row="true" Spacing="1">
-                            <MudButton Variant="Variant.Outlined"
-                                       Size="Size.Small"
-                                       Color="Color.Primary"
-                                       Disabled="@_isBusy"
-                                       OnClick="@(() => ApplyGeneratedHistory(context.Id))">
-                                불러오기
-                            </MudButton>
-                            <MudButton Variant="Variant.Outlined"
-                                       Size="Size.Small"
-                                       Color="Color.Secondary"
-                                       Disabled="@_isBusy"
-                                       StartIcon="@Icons.Material.Filled.ContentCopy"
-                                       OnClick="@(() => CopyToClipboardAsync(context.Content))">
-                                복사
-                            </MudButton>
-                            <MudButton Variant="Variant.Outlined"
-                                       Size="Size.Small"
-                                       Color="Color.Error"
-                                       Disabled="@_isBusy"
-                                       OnClick="@(() => DeleteGeneratedHistoryAsync(context.Id))">
-                                삭제
-                            </MudButton>
-                        </MudStack>
-                    </MudTd>
-                </RowTemplate>
-            </MudTable>
-        }
-    </MudPaper>
-
-    <MudPaper Elevation="0" Outlined="true" Class="section-panel">
-        <MudText Typo="Typo.h6">5) 교육과정/교과서 메타데이터 (NCIC + KOTRY + NEIS)</MudText>
+        <MudText Typo="Typo.h6">4) 교육과정/교과서 메타데이터 (NCIC + KOTRY + NEIS)</MudText>
         <MudGrid Class="mt-2">
             <MudItem xs="12" md="3">
                 <MudSelect T="SchoolLevel" @bind-Value="MetadataSchoolLevel" Variant="Variant.Outlined" Label="학교급" FullWidth="true">
@@ -397,7 +308,7 @@
                 <MudTextField @bind-Value="_resolvedTextbookPublisher" Variant="Variant.Outlined" Label="출판사" FullWidth="true" />
             </MudItem>
             <MudItem xs="12" md="4">
-                <MudTextField @bind-Value="_resolvedTextbookTitle" Variant="Variant.Outlined" Label="교과서명" FullWidth="true" />
+                <MudTextField @bind-Value="_resolvedMetadataSubject" Variant="Variant.Outlined" Label="과목" FullWidth="true" />
             </MudItem>
             <MudItem xs="12" md="2" Class="align-end">
                 <MudButton Variant="Variant.Outlined" Color="Color.Primary" OnClick="ApplyRecommendedMetadataAsync" Disabled="@_isBusy" FullWidth="true">
@@ -405,15 +316,134 @@
                 </MudButton>
             </MudItem>
         </MudGrid>
-        @if (!string.IsNullOrWhiteSpace(_resolvedCurriculumRevision) || !string.IsNullOrWhiteSpace(_resolvedTextbookPublisher) || !string.IsNullOrWhiteSpace(_resolvedTextbookTitle))
+        @if (!string.IsNullOrWhiteSpace(_resolvedCurriculumRevision) || !string.IsNullOrWhiteSpace(_resolvedTextbookPublisher) || !string.IsNullOrWhiteSpace(_resolvedMetadataSubject))
         {
             <MudPaper Outlined="true" Class="pa-2 mt-2">
                 <MudText Typo="Typo.caption">
                     반영값: 개정년도=@(_resolvedCurriculumRevision.Length == 0 ? "-" : _resolvedCurriculumRevision),
                     출판사=@(_resolvedTextbookPublisher.Length == 0 ? "-" : _resolvedTextbookPublisher),
-                    교과서명=@(_resolvedTextbookTitle.Length == 0 ? "-" : _resolvedTextbookTitle)
+                    과목=@(_resolvedMetadataSubject.Length == 0 ? "-" : _resolvedMetadataSubject)
                 </MudText>
             </MudPaper>
+        }
+    </MudPaper>
+
+    <MudPaper Elevation="0" Outlined="true" Class="section-panel">
+        <MudText Typo="Typo.h6">5) AI 요약/퀴즈 생성</MudText>
+        <MudGrid Class="mt-2">
+            <MudItem xs="12" md="8">
+                <MudText Typo="Typo.subtitle2">시험 범위 선택</MudText>
+                <MudTable Items="_examRanges" Dense="true" Hover="true" Class="mt-1">
+                    <HeaderContent>
+                        <MudTh>과목</MudTh>
+                        <MudTh>범위</MudTh>
+                        <MudTh>동작</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd>@context.Subject</MudTd>
+                        <MudTd>@context.StartPage ~ @context.EndPage</MudTd>
+                        <MudTd>
+                            <MudButton Variant="@(IsSelectedExamRange(context.Id) ? Variant.Filled : Variant.Outlined)"
+                                       Color="Color.Primary"
+                                       Size="Size.Small"
+                                       OnClick="@(() => SelectExamRange(context.Id))">
+                                @(IsSelectedExamRange(context.Id) ? "선택됨" : "선택")
+                            </MudButton>
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudPaper Outlined="true" Class="pa-3">
+                    <MudText Typo="Typo.caption">선택된 범위</MudText>
+                    <MudText Typo="Typo.body2">@SelectedExamRangeDisplay</MudText>
+                    <MudDivider Class="my-2" />
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="GenerateSummaryAsync" Disabled="@(_isBusy || !CanGenerateContent)" FullWidth="true">
+                        요약 생성
+                    </MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="GenerateQuizAsync" Disabled="@(_isBusy || !CanGenerateContent)" FullWidth="true" Class="mt-2">
+                        퀴즈 생성
+                    </MudButton>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+        @if (!string.IsNullOrWhiteSpace(_generatedContent))
+        {
+            <MudDivider Class="my-3" />
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                <MudText Typo="Typo.caption">Provider: @_generatedProvider / Model: @_generatedModel</MudText>
+                <MudButton Variant="Variant.Outlined"
+                           Size="Size.Small"
+                           Color="Color.Primary"
+                           Disabled="@_isBusy"
+                           StartIcon="@Icons.Material.Filled.ContentCopy"
+                           OnClick="@(() => CopyToClipboardAsync(_generatedContent))">
+                    복사
+                </MudButton>
+            </MudStack>
+            <MudPaper Outlined="true" Class="pa-3 mt-2 generated-content">
+                <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">@_generatedContent</MudText>
+            </MudPaper>
+        }
+
+        @if (_generatedHistories.Count > 0)
+        {
+            <MudDivider Class="my-3" />
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <MudText Typo="Typo.subtitle2">생성 이력</MudText>
+                <MudSelect T="string" @bind-Value="_historyFilter" Variant="Variant.Outlined" Dense="true" Margin="Margin.Dense" Style="min-width: 160px;">
+                    <MudSelectItem Value="@("All")">전체</MudSelectItem>
+                    <MudSelectItem Value="@("Summary")">요약</MudSelectItem>
+                    <MudSelectItem Value="@("Quiz")">퀴즈</MudSelectItem>
+                </MudSelect>
+            </MudStack>
+            <MudTable Items="FilteredGeneratedHistories" Dense="true" Hover="true" Class="mt-2">
+                <HeaderContent>
+                    <MudTh>유형</MudTh>
+                    <MudTh>범위</MudTh>
+                    <MudTh>모델</MudTh>
+                    <MudTh>생성시각</MudTh>
+                    <MudTh>미리보기</MudTh>
+                    <MudTh>동작</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.ContentType</MudTd>
+                    <MudTd>@($"{context.Subject} {context.StartPage}~{context.EndPage}")</MudTd>
+                    <MudTd>@($"{context.Provider} / {context.Model}")</MudTd>
+                    <MudTd>@context.GeneratedAtUtc.LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss")</MudTd>
+                    <MudTd>
+                        <MudTooltip Text="@context.Content">
+                            <MudText Typo="Typo.caption" Class="job-error">확인</MudText>
+                        </MudTooltip>
+                    </MudTd>
+                    <MudTd>
+                        <MudStack Row="true" Spacing="1">
+                            <MudButton Variant="Variant.Outlined"
+                                       Size="Size.Small"
+                                       Color="Color.Primary"
+                                       Disabled="@_isBusy"
+                                       OnClick="@(() => ApplyGeneratedHistory(context.Id))">
+                                불러오기
+                            </MudButton>
+                            <MudButton Variant="Variant.Outlined"
+                                       Size="Size.Small"
+                                       Color="Color.Secondary"
+                                       Disabled="@_isBusy"
+                                       StartIcon="@Icons.Material.Filled.ContentCopy"
+                                       OnClick="@(() => CopyToClipboardAsync(context.Content))">
+                                복사
+                            </MudButton>
+                            <MudButton Variant="Variant.Outlined"
+                                       Size="Size.Small"
+                                       Color="Color.Error"
+                                       Disabled="@_isBusy"
+                                       OnClick="@(() => DeleteGeneratedHistoryAsync(context.Id))">
+                                삭제
+                            </MudButton>
+                        </MudStack>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
         }
     </MudPaper>
 
@@ -536,12 +566,15 @@
     private readonly List<SourceStatusModel> _sourceStatuses = [];
     private string _resolvedCurriculumRevision = string.Empty;
     private string _resolvedTextbookPublisher = string.Empty;
-    private string _resolvedTextbookTitle = string.Empty;
+    private string _resolvedMetadataSubject = string.Empty;
     private readonly SemaphoreSlim _workspaceReloadLock = new(1, 1);
     private CancellationTokenSource? _autoRefreshCts;
     private Task? _autoRefreshTask;
     private bool IsWorkspaceSelected => Guid.TryParse(_selectedWorkspaceId, out _);
-    private bool CanGenerateContent => IsWorkspaceSelected && Guid.TryParse(_selectedExamRangeId, out _);
+    private bool CanGenerateContent =>
+        IsWorkspaceSelected &&
+        Guid.TryParse(_selectedExamRangeId, out _) &&
+        !string.IsNullOrWhiteSpace(_resolvedTextbookPublisher);
     private IEnumerable<GeneratedContentHistoryModel> FilteredGeneratedHistories => _historyFilter switch
     {
         "Summary" => _generatedHistories.Where(x => x.ContentType == GeneratedContentType.Summary),
@@ -693,6 +726,11 @@
     {
         await RunWithErrorHandlingAsync(async () =>
         {
+            if (string.IsNullOrWhiteSpace(_resolvedTextbookPublisher))
+            {
+                throw new InvalidOperationException("먼저 메타데이터를 조회하고 출판사를 확정하세요.");
+            }
+
             var workspaceId = RequireWorkspaceSelection();
             if (!Guid.TryParse(_selectedExamRangeId, out var examRangeId))
             {
@@ -802,7 +840,33 @@
     {
         _resolvedCurriculumRevision = _curriculumResults.FirstOrDefault()?.RevisionCode ?? string.Empty;
         _resolvedTextbookPublisher = _textbookResults.FirstOrDefault()?.Publisher ?? string.Empty;
-        _resolvedTextbookTitle = _textbookResults.FirstOrDefault()?.Title ?? string.Empty;
+        _resolvedMetadataSubject = _textbookResults.FirstOrDefault()?.Subject ?? ResolveMetadataSubject();
+    }
+
+    private bool IsSelectedExamRange(Guid examRangeId)
+    {
+        return Guid.TryParse(_selectedExamRangeId, out var selectedExamRangeId) && selectedExamRangeId == examRangeId;
+    }
+
+    private void SelectExamRange(Guid examRangeId)
+    {
+        _selectedExamRangeId = examRangeId.ToString();
+    }
+
+    private string SelectedExamRangeDisplay
+    {
+        get
+        {
+            if (!Guid.TryParse(_selectedExamRangeId, out var examRangeId))
+            {
+                return "선택된 시험 범위 없음";
+            }
+
+            var selected = _examRanges.FirstOrDefault(x => x.Id == examRangeId);
+            return selected is null
+                ? "선택된 시험 범위 없음"
+                : $"{selected.Subject} {selected.StartPage}~{selected.EndPage}";
+        }
     }
 
     private async Task ReloadWorkspacesAsync()
