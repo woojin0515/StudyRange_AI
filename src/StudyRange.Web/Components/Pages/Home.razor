@@ -1,5 +1,6 @@
 ﻿@page "/"
 @inject IStudyCoachService StudyCoachService
+@implements IAsyncDisposable
 
 <PageTitle>StudyRange AI</PageTitle>
 
@@ -384,6 +385,9 @@
     private readonly List<TextbookCatalogModel> _textbookResults = [];
     private readonly List<SchoolContextFactModel> _schoolFactResults = [];
     private readonly List<SourceStatusModel> _sourceStatuses = [];
+    private readonly SemaphoreSlim _workspaceReloadLock = new(1, 1);
+    private CancellationTokenSource? _autoRefreshCts;
+    private Task? _autoRefreshTask;
     private bool IsWorkspaceSelected => Guid.TryParse(_selectedWorkspaceId, out _);
     private bool CanGenerateContent => IsWorkspaceSelected && Guid.TryParse(_selectedExamRangeId, out _);
     private string UploadAccept => _selectedDocumentType switch
@@ -401,6 +405,9 @@
             _selectedWorkspaceId = _workspaces[0].Id.ToString();
             await LoadWorkspaceDataAsync();
         }
+
+        _autoRefreshCts = new CancellationTokenSource();
+        _autoRefreshTask = RunAutoRefreshAsync(_autoRefreshCts.Token);
     }
 
     private async Task CreateWorkspaceAsync()
@@ -558,6 +565,9 @@
 
     private async Task LoadWorkspaceDataAsync()
     {
+        await _workspaceReloadLock.WaitAsync();
+        try
+        {
         _examRanges.Clear();
         _documents.Clear();
         _jobs.Clear();
@@ -578,6 +588,37 @@
         else if (_examRanges.Count == 0)
         {
             _selectedExamRangeId = string.Empty;
+        }
+        }
+        finally
+        {
+            _workspaceReloadLock.Release();
+        }
+    }
+
+    private async Task RunAutoRefreshAsync(CancellationToken cancellationToken)
+    {
+        using var timer = new PeriodicTimer(TimeSpan.FromSeconds(5));
+        while (await timer.WaitForNextTickAsync(cancellationToken))
+        {
+            try
+            {
+                await InvokeAsync(async () =>
+                {
+                    if (IsWorkspaceSelected)
+                    {
+                        await LoadWorkspaceDataAsync();
+                        StateHasChanged();
+                    }
+                });
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+            catch
+            {
+            }
         }
     }
 
@@ -604,5 +645,27 @@
         {
             _errorMessage = ex.Message;
         }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_autoRefreshCts is not null)
+        {
+            await _autoRefreshCts.CancelAsync();
+            _autoRefreshCts.Dispose();
+        }
+
+        if (_autoRefreshTask is not null)
+        {
+            try
+            {
+                await _autoRefreshTask;
+            }
+            catch (OperationCanceledException)
+            {
+            }
+        }
+
+        _workspaceReloadLock.Dispose();
     }
 }
