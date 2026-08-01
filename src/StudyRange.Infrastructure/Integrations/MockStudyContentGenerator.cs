@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Options;
 using StudyRange.Application.Contracts;
 using StudyRange.Application.UseCases;
 using StudyRange.Domain.Entities;
@@ -8,9 +9,9 @@ public sealed class MockStudyContentGenerator : IStudyContentGenerator
 {
     private readonly LlmOptions _options;
 
-    public MockStudyContentGenerator(LlmOptions options)
+    public MockStudyContentGenerator(IOptions<LlmOptions> options)
     {
-        _options = options;
+        _options = options.Value;
     }
 
     public Task<GeneratedStudyContentModel> GenerateAsync(

@@ -1,4 +1,5 @@
 using System.Xml.Linq;
+using Microsoft.Extensions.Options;
 using StudyRange.Application.Contracts;
 using StudyRange.Application.UseCases;
 
@@ -11,10 +12,10 @@ public sealed class KotryTextbookProvider : IEducationTextbookProvider
 
     public string SourceName => "KOTRY";
 
-    public KotryTextbookProvider(HttpClient httpClient, KotryApiOptions options)
+    public KotryTextbookProvider(HttpClient httpClient, IOptions<KotryApiOptions> options)
     {
         _httpClient = httpClient;
-        _options = options;
+        _options = options.Value;
     }
 
     public async Task<SourceFetchResult<TextbookCatalogModel>> FetchTextbooksAsync(

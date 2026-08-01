@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Options;
 using StudyRange.Infrastructure.Integrations;
 
 namespace StudyRange.Infrastructure.HealthChecks;
@@ -8,10 +9,10 @@ public sealed class ConfigurationHealthCheck : IHealthCheck
     private readonly LlmOptions _llmOptions;
     private readonly OcrOptions _ocrOptions;
 
-    public ConfigurationHealthCheck(LlmOptions llmOptions, OcrOptions ocrOptions)
+    public ConfigurationHealthCheck(IOptions<LlmOptions> llmOptions, IOptions<OcrOptions> ocrOptions)
     {
-        _llmOptions = llmOptions;
-        _ocrOptions = ocrOptions;
+        _llmOptions = llmOptions.Value;
+        _ocrOptions = ocrOptions.Value;
     }
 
     public Task<HealthCheckResult> CheckHealthAsync(HealthCheckContext context, CancellationToken cancellationToken = default)

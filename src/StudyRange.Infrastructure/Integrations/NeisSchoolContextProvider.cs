@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.Extensions.Options;
 using StudyRange.Application.Contracts;
 using StudyRange.Application.UseCases;
 
@@ -11,10 +12,10 @@ public sealed class NeisSchoolContextProvider : IEducationSchoolContextProvider
 
     public string SourceName => "NEIS";
 
-    public NeisSchoolContextProvider(HttpClient httpClient, NeisApiOptions options)
+    public NeisSchoolContextProvider(HttpClient httpClient, IOptions<NeisApiOptions> options)
     {
         _httpClient = httpClient;
-        _options = options;
+        _options = options.Value;
     }
 
     public async Task<SourceFetchResult<SchoolContextFactModel>> FetchSchoolContextAsync(

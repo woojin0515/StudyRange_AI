@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using Microsoft.Extensions.Options;
 using StudyRange.Application.Contracts;
 using StudyRange.Application.UseCases;
 using StudyRange.Domain.Entities;
@@ -13,10 +14,10 @@ public sealed class AzureOpenAiStudyContentGenerator : IStudyContentGenerator
     private readonly HttpClient _httpClient;
     private readonly LlmOptions _options;
 
-    public AzureOpenAiStudyContentGenerator(HttpClient httpClient, LlmOptions options)
+    public AzureOpenAiStudyContentGenerator(HttpClient httpClient, IOptions<LlmOptions> options)
     {
         _httpClient = httpClient;
-        _options = options;
+        _options = options.Value;
     }
 
     public async Task<GeneratedStudyContentModel> GenerateAsync(

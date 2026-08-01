@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using StudyRange.Application.Contracts;
 using StudyRange.Domain.Entities;
 using StudyRange.Infrastructure.Integrations;
@@ -24,14 +25,14 @@ public sealed class DocumentProcessingWorker : BackgroundService
         IProcessingJobRepository jobRepository,
         IWorkspaceRepository workspaceRepository,
         IHttpClientFactory httpClientFactory,
-        OcrOptions ocrOptions,
+        IOptions<OcrOptions> ocrOptions,
         ILogger<DocumentProcessingWorker> logger)
     {
         _processingQueue = processingQueue;
         _jobRepository = jobRepository;
         _workspaceRepository = workspaceRepository;
         _httpClientFactory = httpClientFactory;
-        _ocrOptions = ocrOptions;
+        _ocrOptions = ocrOptions.Value;
         _logger = logger;
     }
 
