@@ -24,6 +24,12 @@ public sealed class InMemoryWorkspaceRepository : IWorkspaceRepository
         return Task.CompletedTask;
     }
 
+    public Task DeleteAsync(Guid workspaceId, CancellationToken cancellationToken)
+    {
+        _store.TryRemove(workspaceId, out _);
+        return Task.CompletedTask;
+    }
+
     public Task<Workspace?> GetByIdAsync(Guid workspaceId, CancellationToken cancellationToken)
     {
         _store.TryGetValue(workspaceId, out var workspace);

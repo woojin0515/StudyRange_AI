@@ -4,13 +4,14 @@ Blazor Server 기반 시험 범위 학습 코치 MVP입니다.
 
 ## 현재 구현 범위
 
-- Workspace 생성/선택
+- Workspace 생성/선택/삭제
 - 시험 범위 등록
 - 문서 업로드(파일 형식/시그니처/크기 검증)
 - 비동기 문서 처리 큐/워커
   - PDF: 페이지 추정 + 텍스트 샘플 요약
   - 이미지: 기본 요약 + (선택) Azure Vision OCR
   - 실패 작업 재처리 버튼 지원
+  - Workspace 삭제 시 연결된 업로드 파일 정리
 - AI 요약/퀴즈 생성
   - OpenAI API 키만으로 기본 동작
   - Endpoint + Deployment 설정 시 Azure OpenAI 경로 사용

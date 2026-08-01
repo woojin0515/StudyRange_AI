@@ -54,6 +54,17 @@ public sealed class StudyCoachService : IStudyCoachService
         return MapWorkspace(workspace);
     }
 
+    public async Task DeleteWorkspaceAsync(Guid workspaceId, CancellationToken cancellationToken)
+    {
+        var workspace = await GetWorkspaceOrThrowAsync(workspaceId, cancellationToken);
+        foreach (var path in workspace.Documents.Select(x => x.StoredPath).Distinct(StringComparer.Ordinal))
+        {
+            _ = await _fileStorage.DeleteAsync(path, cancellationToken);
+        }
+
+        await _workspaceRepository.DeleteAsync(workspaceId, cancellationToken);
+    }
+
     public async Task<IReadOnlyList<ExamRangeModel>> GetExamRangesAsync(Guid workspaceId, CancellationToken cancellationToken)
     {
         var workspace = await GetWorkspaceOrThrowAsync(workspaceId, cancellationToken);

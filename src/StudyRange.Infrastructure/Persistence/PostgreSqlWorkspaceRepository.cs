@@ -42,6 +42,17 @@ public sealed class PostgreSqlWorkspaceRepository : IWorkspaceRepository
         await transaction.CommitAsync(cancellationToken);
     }
 
+    public async Task DeleteAsync(Guid workspaceId, CancellationToken cancellationToken)
+    {
+        await using var connection = _connectionFactory.Create();
+        await connection.OpenAsync(cancellationToken);
+
+        const string sql = "DELETE FROM workspaces WHERE id = @id";
+        await using var command = new NpgsqlCommand(sql, connection);
+        command.Parameters.AddWithValue("id", workspaceId);
+        _ = await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
     public async Task<Workspace?> GetByIdAsync(Guid workspaceId, CancellationToken cancellationToken)
     {
         await using var connection = _connectionFactory.Create();

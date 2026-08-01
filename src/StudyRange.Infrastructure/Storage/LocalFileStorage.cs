@@ -29,4 +29,20 @@ public sealed class LocalFileStorage : IFileStorage
         await content.CopyToAsync(output, cancellationToken);
         return path;
     }
+
+    public Task<bool> DeleteAsync(string storedPath, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(storedPath))
+        {
+            throw new ArgumentException("Stored path is required.", nameof(storedPath));
+        }
+
+        if (!File.Exists(storedPath))
+        {
+            return Task.FromResult(false);
+        }
+
+        File.Delete(storedPath);
+        return Task.FromResult(true);
+    }
 }

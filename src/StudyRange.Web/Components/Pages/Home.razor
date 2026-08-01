@@ -95,19 +95,28 @@
                         {
                             <MudPaper Outlined="true" Class="pa-3 workspace-item">
                                 <MudGrid>
-                                    <MudItem xs="12" md="6">
+                                    <MudItem xs="12" md="5">
                                         <MudText Typo="Typo.subtitle2">@workspace.Name</MudText>
                                     </MudItem>
                                     <MudItem xs="12" md="3">
                                         <MudText Typo="Typo.caption">@workspace.CreatedAtUtc.LocalDateTime.ToString("yyyy-MM-dd HH:mm")</MudText>
                                     </MudItem>
-                                    <MudItem xs="12" md="3">
+                                    <MudItem xs="6" md="2">
                                         <MudButton Variant="Variant.Outlined"
                                                    Color="@(IsSelectedWorkspace(workspace.Id) ? Color.Success : Color.Primary)"
                                                    OnClick="@(() => SelectWorkspaceAsync(workspace.Id))"
                                                    Disabled="@_isBusy"
                                                    FullWidth="true">
                                             @(IsSelectedWorkspace(workspace.Id) ? "선택됨" : "선택")
+                                        </MudButton>
+                                    </MudItem>
+                                    <MudItem xs="6" md="2">
+                                        <MudButton Variant="Variant.Outlined"
+                                                   Color="Color.Error"
+                                                   OnClick="@(() => DeleteWorkspaceAsync(workspace.Id))"
+                                                   Disabled="@_isBusy"
+                                                   FullWidth="true">
+                                            삭제
                                         </MudButton>
                                     </MudItem>
                                 </MudGrid>
@@ -541,6 +550,38 @@
         _generatedProvider = string.Empty;
         _generatedModel = string.Empty;
         await LoadWorkspaceDataAsync();
+    }
+
+    private async Task DeleteWorkspaceAsync(Guid workspaceId)
+    {
+        await RunWithErrorHandlingAsync(async () =>
+        {
+            await StudyCoachService.DeleteWorkspaceAsync(workspaceId, CancellationToken.None);
+            if (Guid.TryParse(_selectedWorkspaceId, out var selectedWorkspaceId) && selectedWorkspaceId == workspaceId)
+            {
+                _selectedWorkspaceId = string.Empty;
+                _selectedExamRangeId = string.Empty;
+                _generatedContent = string.Empty;
+                _generatedProvider = string.Empty;
+                _generatedModel = string.Empty;
+            }
+
+            await ReloadWorkspacesAsync();
+            if (_workspaces.Count > 0 && !Guid.TryParse(_selectedWorkspaceId, out _))
+            {
+                _selectedWorkspaceId = _workspaces[0].Id.ToString();
+                await LoadWorkspaceDataAsync();
+            }
+            else if (_workspaces.Count == 0)
+            {
+                _examRanges.Clear();
+                _documents.Clear();
+                _jobs.Clear();
+                _generatedHistories.Clear();
+            }
+
+            _infoMessage = "Workspace를 삭제했습니다.";
+        });
     }
 
     private bool IsSelectedWorkspace(Guid workspaceId)

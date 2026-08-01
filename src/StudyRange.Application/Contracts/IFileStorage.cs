@@ -6,4 +6,7 @@ public interface IFileStorage
         Stream content,
         string originalFileName,
         CancellationToken cancellationToken);
+    Task<bool> DeleteAsync(
+        string storedPath,
+        CancellationToken cancellationToken);
 }
