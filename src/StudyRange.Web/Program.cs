@@ -48,7 +48,9 @@ app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks
                     description = x.Value.Description,
                     durationMs = x.Value.Duration.TotalMilliseconds,
                     error = x.Value.Exception?.Message,
-                    data = x.Value.Data
+                    data = x.Value.Data.ToDictionary(
+                        kv => kv.Key,
+                        kv => kv.Value?.ToString())
                 })
         };
 
