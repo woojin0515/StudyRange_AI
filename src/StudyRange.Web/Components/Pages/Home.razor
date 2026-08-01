@@ -1,5 +1,6 @@
 ﻿@page "/"
 @inject IStudyCoachService StudyCoachService
+@inject IJSRuntime JsRuntime
 @implements IAsyncDisposable
 
 <PageTitle>StudyRange AI</PageTitle>
@@ -192,7 +193,17 @@
         @if (!string.IsNullOrWhiteSpace(_generatedContent))
         {
             <MudDivider Class="my-3" />
-            <MudText Typo="Typo.caption">Provider: @_generatedProvider / Model: @_generatedModel</MudText>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+                <MudText Typo="Typo.caption">Provider: @_generatedProvider / Model: @_generatedModel</MudText>
+                <MudButton Variant="Variant.Outlined"
+                           Size="Size.Small"
+                           Color="Color.Primary"
+                           Disabled="@_isBusy"
+                           StartIcon="@Icons.Material.Filled.ContentCopy"
+                           OnClick="@(() => CopyToClipboardAsync(_generatedContent))">
+                    복사
+                </MudButton>
+            </MudStack>
             <MudPaper Outlined="true" Class="pa-3 mt-2 generated-content">
                 <MudText Typo="Typo.body2" Style="white-space: pre-wrap;">@_generatedContent</MudText>
             </MudPaper>
@@ -236,6 +247,14 @@
                                        Disabled="@_isBusy"
                                        OnClick="@(() => ApplyGeneratedHistory(context.Id))">
                                 불러오기
+                            </MudButton>
+                            <MudButton Variant="Variant.Outlined"
+                                       Size="Size.Small"
+                                       Color="Color.Secondary"
+                                       Disabled="@_isBusy"
+                                       StartIcon="@Icons.Material.Filled.ContentCopy"
+                                       OnClick="@(() => CopyToClipboardAsync(context.Content))">
+                                복사
                             </MudButton>
                             <MudButton Variant="Variant.Outlined"
                                        Size="Size.Small"
@@ -692,6 +711,15 @@
             await StudyCoachService.DeleteGeneratedContentAsync(workspaceId, historyId, CancellationToken.None);
             await LoadWorkspaceDataAsync();
             _infoMessage = "생성 이력을 삭제했습니다.";
+        });
+    }
+
+    private async Task CopyToClipboardAsync(string text)
+    {
+        await RunWithErrorHandlingAsync(async () =>
+        {
+            await JsRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text);
+            _infoMessage = "클립보드에 복사했습니다.";
         });
     }
 
