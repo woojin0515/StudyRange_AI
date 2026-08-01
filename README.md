@@ -10,6 +10,7 @@ Blazor Server 기반 시험 범위 학습 코치 MVP입니다.
 - 비동기 문서 처리 큐/워커
   - PDF: 페이지 추정 + 텍스트 샘플 요약
   - 이미지: 기본 요약 + (선택) Azure Vision OCR
+  - 실패 작업 재처리 버튼 지원
 - AI 요약/퀴즈 생성
   - OpenAI API 키만으로 기본 동작
   - Endpoint + Deployment 설정 시 Azure OpenAI 경로 사용
@@ -17,6 +18,9 @@ Blazor Server 기반 시험 범위 학습 코치 MVP입니다.
   - NCIC(기본 개정 교육과정)
   - KOTRY(API 키 기반 교과서 조회, 미설정 시 Mock 데이터)
   - NEIS(학교 정보 조회)
+- 헬스체크(`/health`)
+  - 설정 유효성(LLM/OCR 필수값)
+  - 스토리지 쓰기 가능 여부
 
 ## 기술 스택
 
