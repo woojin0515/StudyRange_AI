@@ -15,6 +15,7 @@ Blazor Server 기반 시험 범위 학습 코치 MVP입니다.
   - OpenAI API 키만으로 기본 동작
   - Endpoint + Deployment 설정 시 Azure OpenAI 경로 사용
   - 생성 결과 이력 저장(Workspace 단위)
+  - 생성 이력 필터/불러오기/삭제 지원
 - 교육 메타데이터 통합 조회
   - NCIC(기본 개정 교육과정)
   - KOTRY(API 키 기반 교과서 조회, 미설정 시 Mock 데이터)
@@ -22,6 +23,7 @@ Blazor Server 기반 시험 범위 학습 코치 MVP입니다.
 - 헬스체크(`/health`)
   - 설정 유효성(LLM/OCR 필수값)
   - 스토리지 쓰기 가능 여부
+  - PostgreSQL 연결 상태
 
 ## 기술 스택
 
