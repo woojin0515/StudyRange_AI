@@ -61,11 +61,10 @@ public sealed class AzureOpenAiStudyContentGenerator : IStudyContentGenerator
         }
 
         using var doc = JsonDocument.Parse(responseBody);
-        var content = doc.RootElement
+        var messageElement = doc.RootElement
             .GetProperty("choices")[0]
-            .GetProperty("message")
-            .GetProperty("content")
-            .GetString();
+            .GetProperty("message");
+        var content = ExtractMessageContent(messageElement);
 
         if (string.IsNullOrWhiteSpace(content))
         {
@@ -117,8 +116,43 @@ public sealed class AzureOpenAiStudyContentGenerator : IStudyContentGenerator
             model = _options.Model,
             messages,
             temperature = 0.4,
-            max_tokens = 1200
+            max_completion_tokens = 1200
         };
+    }
+
+    private static string? ExtractMessageContent(JsonElement messageElement)
+    {
+        if (!messageElement.TryGetProperty("content", out var contentElement))
+        {
+            return null;
+        }
+
+        if (contentElement.ValueKind == JsonValueKind.String)
+        {
+            return contentElement.GetString();
+        }
+
+        if (contentElement.ValueKind == JsonValueKind.Array)
+        {
+            var parts = contentElement
+                .EnumerateArray()
+                .Where(x => x.ValueKind == JsonValueKind.Object)
+                .Where(x => x.TryGetProperty("type", out var typeElement) &&
+                            typeElement.ValueKind == JsonValueKind.String &&
+                            typeElement.GetString() == "text")
+                .Select(x => x.TryGetProperty("text", out var textElement) && textElement.ValueKind == JsonValueKind.String
+                    ? textElement.GetString()
+                    : null)
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .ToList();
+
+            if (parts.Count > 0)
+            {
+                return string.Join(Environment.NewLine, parts);
+            }
+        }
+
+        return null;
     }
 
     private static string BuildPrompt(Workspace workspace, ExamRange examRange, GeneratedContentType contentType)
