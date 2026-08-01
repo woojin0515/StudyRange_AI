@@ -62,13 +62,23 @@ public static class DependencyInjection
             services.AddSingleton<IStudyContentGenerator, MockStudyContentGenerator>();
         }
 
-        services.AddSingleton(configuration.GetSection(KotryApiOptions.SectionName).Get<KotryApiOptions>() ?? new KotryApiOptions());
-        services.AddSingleton(configuration.GetSection(NcicApiOptions.SectionName).Get<NcicApiOptions>() ?? new NcicApiOptions());
-        services.AddSingleton(configuration.GetSection(NeisApiOptions.SectionName).Get<NeisApiOptions>() ?? new NeisApiOptions());
+        var kotryOptions = configuration.GetSection(KotryApiOptions.SectionName).Get<KotryApiOptions>() ?? new KotryApiOptions();
+        var ncicOptions = configuration.GetSection(NcicApiOptions.SectionName).Get<NcicApiOptions>() ?? new NcicApiOptions();
+        var neisOptions = configuration.GetSection(NeisApiOptions.SectionName).Get<NeisApiOptions>() ?? new NeisApiOptions();
+
+        services.AddSingleton(kotryOptions);
+        services.AddSingleton(ncicOptions);
+        services.AddSingleton(neisOptions);
 
         services.AddSingleton<IEducationCurriculumProvider, NcicCurriculumProvider>();
-        services.AddTransient<IEducationTextbookProvider, KotryTextbookProvider>();
-        services.AddSingleton<IEducationTextbookProvider, MockTextbookProvider>();
+        if (string.IsNullOrWhiteSpace(kotryOptions.ApiKey))
+        {
+            services.AddSingleton<IEducationTextbookProvider, MockTextbookProvider>();
+        }
+        else
+        {
+            services.AddTransient<IEducationTextbookProvider, KotryTextbookProvider>();
+        }
         services.AddSingleton<IEducationSchoolContextProvider, NeisSchoolContextProvider>();
 
         services.AddHostedService<DocumentProcessingWorker>();
