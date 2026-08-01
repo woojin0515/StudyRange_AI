@@ -9,7 +9,7 @@ Blazor Server 기반 시험 범위 학습 코치 MVP입니다.
 - 문서 업로드(파일 형식/시그니처/크기 검증)
 - 비동기 문서 처리 큐/워커
   - PDF: 페이지 추정 + 텍스트 샘플 요약
-  - 이미지: 처리 상태 및 기본 요약
+  - 이미지: 기본 요약 + (선택) Azure Vision OCR
 - AI 요약/퀴즈 생성
   - OpenAI API 키만으로 기본 동작
   - Endpoint + Deployment 설정 시 Azure OpenAI 경로 사용
@@ -78,3 +78,16 @@ dotnet run --project src/StudyRange.Web/StudyRange.Web.csproj
   }
 }
 ```
+
+### OCR (선택)
+
+```json
+"Ocr": {
+  "Provider": "None",
+  "Endpoint": "",
+  "ApiKey": ""
+}
+```
+
+- `Provider = AzureVision` + `Endpoint`, `ApiKey` 설정 시 이미지 OCR 수행
+- 미설정 시 기존처럼 이미지 메타 요약만 생성
