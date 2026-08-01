@@ -135,6 +135,29 @@ public sealed class StudyCoachService : IStudyCoachService
             .ToList();
     }
 
+    public async Task RetryProcessingJobAsync(Guid workspaceId, Guid jobId, CancellationToken cancellationToken)
+    {
+        var workspace = await GetWorkspaceOrThrowAsync(workspaceId, cancellationToken);
+        var targetJob = await _processingJobRepository.GetByIdAsync(jobId, cancellationToken);
+        if (targetJob is null || targetJob.WorkspaceId != workspaceId)
+        {
+            throw new InvalidOperationException("재처리 대상 작업을 찾을 수 없습니다.");
+        }
+
+        if (targetJob.Status != ProcessingStatus.Failed)
+        {
+            throw new InvalidOperationException("실패 상태의 작업만 재처리할 수 있습니다.");
+        }
+
+        var document = workspace.GetDocument(targetJob.DocumentId);
+        document.UpdateProcessing(ProcessingStatus.Queued, "재처리 대기 중");
+        await _workspaceRepository.UpdateAsync(workspace, cancellationToken);
+
+        var retryJob = new ProcessingJob(Guid.NewGuid(), workspaceId, targetJob.DocumentId, DateTimeOffset.UtcNow);
+        await _processingJobRepository.AddAsync(retryJob, cancellationToken);
+        await _processingQueue.EnqueueAsync(retryJob.Id, cancellationToken);
+    }
+
     public async Task<GeneratedStudyContentModel> GenerateContentAsync(
         Guid workspaceId,
         Guid examRangeId,

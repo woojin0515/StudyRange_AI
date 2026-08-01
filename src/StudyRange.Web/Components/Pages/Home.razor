@@ -344,11 +344,28 @@
                         <MudTh>Job</MudTh>
                         <MudTh>상태</MudTh>
                         <MudTh>완료시각</MudTh>
+                        <MudTh>동작</MudTh>
                     </HeaderContent>
                     <RowTemplate>
                         <MudTd>@context.Id.ToString()[..8]</MudTd>
                         <MudTd>@context.Status</MudTd>
                         <MudTd>@(context.CompletedAtUtc?.LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss") ?? "-")</MudTd>
+                        <MudTd>
+                            @if (context.Status == ProcessingStatus.Failed)
+                            {
+                                <MudButton Variant="Variant.Outlined"
+                                           Color="Color.Warning"
+                                           Size="Size.Small"
+                                           Disabled="@_isBusy"
+                                           OnClick="@(() => RetryJobAsync(context.Id))">
+                                    재처리
+                                </MudButton>
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.caption" Class="text-secondary">-</MudText>
+                            }
+                        </MudTd>
                     </RowTemplate>
                 </MudTable>
             </MudPaper>
@@ -562,6 +579,17 @@
             await ReloadWorkspacesAsync();
             await LoadWorkspaceDataAsync();
             _infoMessage = "데이터를 새로고침했습니다.";
+        });
+    }
+
+    private async Task RetryJobAsync(Guid jobId)
+    {
+        await RunWithErrorHandlingAsync(async () =>
+        {
+            var workspaceId = RequireWorkspaceSelection();
+            await StudyCoachService.RetryProcessingJobAsync(workspaceId, jobId, CancellationToken.None);
+            await LoadWorkspaceDataAsync();
+            _infoMessage = "실패 작업을 재처리 큐에 등록했습니다.";
         });
     }
 
