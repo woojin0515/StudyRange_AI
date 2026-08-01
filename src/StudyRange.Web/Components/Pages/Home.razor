@@ -283,7 +283,7 @@
         <MudText Typo="Typo.h6">5) 교육과정/교과서 메타데이터 (NCIC + KOTRY + NEIS)</MudText>
         <MudGrid Class="mt-2">
             <MudItem xs="12" md="2">
-                <MudSelect T="SchoolLevel" Value="_metadataSchoolLevel" ValueChanged="OnMetadataSchoolLevelChanged" Variant="Variant.Outlined" Label="학교급" FullWidth="true">
+                <MudSelect T="SchoolLevel" @bind-Value="MetadataSchoolLevel" Variant="Variant.Outlined" Label="학교급" FullWidth="true">
                     <MudSelectItem Value="@SchoolLevel.Elementary">초등</MudSelectItem>
                     <MudSelectItem Value="@SchoolLevel.Middle">중등</MudSelectItem>
                     <MudSelectItem Value="@SchoolLevel.High">고등</MudSelectItem>
@@ -731,13 +731,6 @@
         });
     }
 
-    private Task OnMetadataSchoolLevelChanged(SchoolLevel schoolLevel)
-    {
-        _metadataSchoolLevel = schoolLevel;
-        _metadataGrade = Math.Clamp(_metadataGrade, 1, GetMaxGradeBySchoolLevel(_metadataSchoolLevel));
-        return Task.CompletedTask;
-    }
-
     private Task ApplyRecommendedMetadataAsync()
     {
         ApplyRecommendedMetadataFromResults();
@@ -754,6 +747,16 @@
             SchoolLevel.Middle or SchoolLevel.High => 3,
             _ => 3
         };
+    }
+
+    private SchoolLevel MetadataSchoolLevel
+    {
+        get => _metadataSchoolLevel;
+        set
+        {
+            _metadataSchoolLevel = value;
+            _metadataGrade = Math.Clamp(_metadataGrade, 1, GetMaxGradeBySchoolLevel(_metadataSchoolLevel));
+        }
     }
 
     private string ResolveMetadataSubject()
