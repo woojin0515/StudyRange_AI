@@ -53,6 +53,7 @@ public static class DependencyInjection
         services.AddSingleton(llmOptions);
         services.AddHttpClient<AzureOpenAiStudyContentGenerator>();
         services.AddHttpClient<KotryTextbookProvider>();
+        services.AddHttpClient<NeisSchoolContextProvider>();
         if (!string.Equals(llmOptions.Provider, "Mock", StringComparison.OrdinalIgnoreCase))
         {
             services.AddTransient<IStudyContentGenerator, AzureOpenAiStudyContentGenerator>();
