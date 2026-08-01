@@ -107,7 +107,7 @@ public sealed class AzureOpenAiStudyContentGenerator : IStudyContentGenerator
             {
                 messages,
                 temperature = 0.4,
-                max_tokens = 1200
+                max_completion_tokens = 1200
             };
         }
 
