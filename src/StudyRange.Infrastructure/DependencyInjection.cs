@@ -2,6 +2,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using StudyRange.Application.Contracts;
+using StudyRange.Infrastructure.HealthChecks;
 using StudyRange.Infrastructure.Integrations;
 using StudyRange.Infrastructure.Persistence;
 using StudyRange.Infrastructure.Processing;
@@ -86,6 +87,10 @@ public static class DependencyInjection
         services.AddSingleton<IEducationSchoolContextProvider, NeisSchoolContextProvider>();
 
         services.AddHostedService<DocumentProcessingWorker>();
+        services.AddHealthChecks()
+            .AddCheck<ConfigurationHealthCheck>("configuration")
+            .AddCheck<StorageHealthCheck>("storage");
+
         return services;
     }
 }
