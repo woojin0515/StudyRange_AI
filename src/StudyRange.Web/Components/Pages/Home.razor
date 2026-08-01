@@ -312,7 +312,8 @@
         <MudText Typo="Typo.h6">5) 시험범위 + AI 요약/퀴즈 생성</MudText>
         <MudGrid Class="mt-2">
             <MudItem xs="12" md="5">
-                <MudTextField @bind-Value="_subject" Label="과목" Variant="Variant.Outlined" Immediate="true" FullWidth="true" />
+                <MudText Typo="Typo.caption">과목</MudText>
+                <MudText Typo="Typo.body2">@ExamRangeSubjectDisplay</MudText>
             </MudItem>
             <MudItem xs="6" md="2">
                 <MudNumericField T="int" @bind-Value="_startPage" Label="시작 페이지" Variant="Variant.Outlined" FullWidth="true" />
@@ -361,6 +362,13 @@
                     <MudText Typo="Typo.caption" Class="mt-1">확정 출판사: @(string.IsNullOrWhiteSpace(_resolvedTextbookPublisher) ? "-" : _resolvedTextbookPublisher)</MudText>
                     <MudText Typo="Typo.caption">확정 과목: @(string.IsNullOrWhiteSpace(_resolvedMetadataSubject) ? "-" : _resolvedMetadataSubject)</MudText>
                     <MudDivider Class="my-2" />
+                    @if (_isBusy && !string.IsNullOrWhiteSpace(_busyMessage))
+                    {
+                        <MudAlert Severity="Severity.Info" Dense="true" Class="mb-2">
+                            <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
+                            @_busyMessage
+                        </MudAlert>
+                    }
                     @if (!CanGenerateContent)
                     {
                         <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-2">@GenerationBlockedReason</MudAlert>
@@ -531,7 +539,6 @@
     private string _workspaceName = string.Empty;
     private string _selectedWorkspaceId = string.Empty;
     private string _selectedExamRangeId = string.Empty;
-    private string _subject = string.Empty;
     private int _startPage = 1;
     private int _endPage = 1;
     private DocumentType _selectedDocumentType = DocumentType.TextbookPdf;
@@ -540,6 +547,7 @@
 
     private string? _infoMessage;
     private string? _errorMessage;
+    private string? _busyMessage;
     private bool _isBusy;
     private string _generatedContent = string.Empty;
     private string _generatedProvider = string.Empty;
@@ -569,6 +577,10 @@
         : !Guid.TryParse(_selectedExamRangeId, out _) ? "시험 범위를 먼저 선택하세요."
         : string.IsNullOrWhiteSpace(_resolvedTextbookPublisher) ? "먼저 메타데이터 조회 후 출판사를 확정하세요."
         : string.Empty;
+    private string ExamRangeSubjectDisplay =>
+        string.IsNullOrWhiteSpace(_resolvedMetadataSubject)
+            ? "(메타데이터 과목 확정 필요)"
+            : _resolvedMetadataSubject;
     private IEnumerable<GeneratedContentHistoryModel> FilteredGeneratedHistories => _historyFilter switch
     {
         "Summary" => _generatedHistories.Where(x => x.ContentType == GeneratedContentType.Summary),
@@ -656,10 +668,10 @@
 
     private async Task AddExamRangeAsync()
     {
-        await RunWithErrorHandlingAsync(async () =>
+        await RunWithErrorHandlingAsync("시험 범위 등록 중...", async () =>
         {
             var workspaceId = RequireWorkspaceSelection();
-            var subject = _subject.Trim();
+            var subject = ResolveExamRangeSubject();
             var startPage = _startPage;
             var endPage = _endPage;
             await StudyCoachService.AddExamRangeAsync(
@@ -669,7 +681,6 @@
                 endPage,
                 CancellationToken.None);
 
-            _subject = string.Empty;
             await LoadWorkspaceDataAsync();
             var createdRange = _examRanges
                 .OrderByDescending(x => x.CreatedAtUtc)
@@ -729,7 +740,10 @@
 
     private async Task GenerateContentAsync(GeneratedContentType contentType)
     {
-        await RunWithErrorHandlingAsync(async () =>
+        var busyMessage = contentType == GeneratedContentType.Summary
+            ? "요약 생성 중..."
+            : "퀴즈 생성 중...";
+        await RunWithErrorHandlingAsync(busyMessage, async () =>
         {
             if (string.IsNullOrWhiteSpace(_resolvedTextbookPublisher))
             {
@@ -840,6 +854,21 @@
 
         var firstSubject = _examRanges.FirstOrDefault()?.Subject;
         return firstSubject?.Trim() ?? string.Empty;
+    }
+
+    private string ResolveExamRangeSubject()
+    {
+        if (!string.IsNullOrWhiteSpace(_resolvedMetadataSubject))
+        {
+            return _resolvedMetadataSubject.Trim();
+        }
+
+        if (!string.IsNullOrWhiteSpace(_metadataSubject))
+        {
+            return _metadataSubject.Trim();
+        }
+
+        throw new InvalidOperationException("시험 범위 과목이 없습니다. 먼저 메타데이터에서 과목을 확정하세요.");
     }
 
     private void ApplyRecommendedMetadataFromResults()
@@ -1011,7 +1040,12 @@
         return workspaceId;
     }
 
-    private async Task RunWithErrorHandlingAsync(Func<Task> action)
+    private Task RunWithErrorHandlingAsync(Func<Task> action)
+    {
+        return RunWithErrorHandlingAsync(null, action);
+    }
+
+    private async Task RunWithErrorHandlingAsync(string? busyMessage, Func<Task> action)
     {
         if (_isBusy)
         {
@@ -1019,6 +1053,7 @@
         }
 
         _isBusy = true;
+        _busyMessage = busyMessage;
         _errorMessage = null;
         _infoMessage = null;
 
@@ -1032,6 +1067,7 @@
         }
         finally
         {
+            _busyMessage = null;
             _isBusy = false;
         }
     }
