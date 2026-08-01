@@ -201,8 +201,15 @@
         @if (_generatedHistories.Count > 0)
         {
             <MudDivider Class="my-3" />
-            <MudText Typo="Typo.subtitle2">생성 이력</MudText>
-            <MudTable Items="_generatedHistories" Dense="true" Hover="true" Class="mt-2">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                <MudText Typo="Typo.subtitle2">생성 이력</MudText>
+                <MudSelect T="string" @bind-Value="_historyFilter" Variant="Variant.Outlined" Dense="true" Margin="Margin.Dense" Style="min-width: 160px;">
+                    <MudSelectItem Value="@("All")">전체</MudSelectItem>
+                    <MudSelectItem Value="@("Summary")">요약</MudSelectItem>
+                    <MudSelectItem Value="@("Quiz")">퀴즈</MudSelectItem>
+                </MudSelect>
+            </MudStack>
+            <MudTable Items="FilteredGeneratedHistories" Dense="true" Hover="true" Class="mt-2">
                 <HeaderContent>
                     <MudTh>유형</MudTh>
                     <MudTh>범위</MudTh>
@@ -428,6 +435,7 @@
     private readonly List<DocumentModel> _documents = [];
     private readonly List<ProcessingJobModel> _jobs = [];
     private readonly List<GeneratedContentHistoryModel> _generatedHistories = [];
+    private string _historyFilter = "All";
 
     private string _workspaceName = string.Empty;
     private string _selectedWorkspaceId = string.Empty;
@@ -459,6 +467,12 @@
     private Task? _autoRefreshTask;
     private bool IsWorkspaceSelected => Guid.TryParse(_selectedWorkspaceId, out _);
     private bool CanGenerateContent => IsWorkspaceSelected && Guid.TryParse(_selectedExamRangeId, out _);
+    private IEnumerable<GeneratedContentHistoryModel> FilteredGeneratedHistories => _historyFilter switch
+    {
+        "Summary" => _generatedHistories.Where(x => x.ContentType == GeneratedContentType.Summary),
+        "Quiz" => _generatedHistories.Where(x => x.ContentType == GeneratedContentType.Quiz),
+        _ => _generatedHistories
+    };
     private string UploadAccept => _selectedDocumentType switch
     {
         DocumentType.TextbookPdf => ".pdf,application/pdf",
