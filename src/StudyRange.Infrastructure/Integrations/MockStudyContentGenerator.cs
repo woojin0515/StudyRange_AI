@@ -18,6 +18,7 @@ public sealed class MockStudyContentGenerator : IStudyContentGenerator
         Workspace workspace,
         ExamRange examRange,
         GeneratedContentType contentType,
+        GeneratedContentContextModel context,
         CancellationToken cancellationToken)
     {
         var completedDocuments = workspace.Documents.Count(d => d.ProcessingStatus == ProcessingStatus.Completed);
@@ -28,6 +29,7 @@ public sealed class MockStudyContentGenerator : IStudyContentGenerator
                 Workspace: {{workspace.Name}}
                 Subject: {{examRange.Subject}}
                 Range: {{examRange.Range.StartPage}}~{{examRange.Range.EndPage}}
+                Publisher: {{context.TextbookPublisher}}
                 Completed documents: {{completedDocuments}}
 
                 1. 핵심 개념을 3개로 나누어 정리하세요.
@@ -37,6 +39,7 @@ public sealed class MockStudyContentGenerator : IStudyContentGenerator
             GeneratedContentType.Quiz => $$"""
                 [Mock Quiz]
                 Subject: {{examRange.Subject}} ({{examRange.Range.StartPage}}~{{examRange.Range.EndPage}})
+                Publisher: {{context.TextbookPublisher}}
                 
                 Q1. 핵심 개념 A를 한 문장으로 설명하세요.
                 Q2. 핵심 개념 B와 C의 차이를 비교하세요.

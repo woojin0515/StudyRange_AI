@@ -38,6 +38,15 @@ public sealed record GeneratedStudyContentModel(
     string Model,
     DateTimeOffset GeneratedAtUtc);
 
+public sealed record GeneratedContentContextModel(
+    string Subject,
+    SchoolLevel SchoolLevel,
+    int Grade,
+    int? BirthYear,
+    string? SchoolName,
+    string? CurriculumRevision,
+    string? TextbookPublisher);
+
 public sealed record GeneratedContentHistoryModel(
     Guid Id,
     Guid ExamRangeId,

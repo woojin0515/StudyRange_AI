@@ -69,10 +69,11 @@ public sealed class PostgreSqlInfrastructureInitializer : IInfrastructureInitial
                                generated_at_utc TIMESTAMPTZ NOT NULL
                            );
 
-                           CREATE INDEX IF NOT EXISTS ix_exam_ranges_workspace_id ON exam_ranges(workspace_id);
-                           CREATE INDEX IF NOT EXISTS ix_document_assets_workspace_id ON document_assets(workspace_id);
-                           CREATE INDEX IF NOT EXISTS ix_processing_jobs_workspace_id ON processing_jobs(workspace_id);
-                           CREATE INDEX IF NOT EXISTS ix_generated_contents_workspace_id ON generated_contents(workspace_id);
+                           CREATE INDEX IF NOT EXISTS ix_workspaces_created_at_utc_desc ON workspaces(created_at_utc DESC);
+                           CREATE INDEX IF NOT EXISTS ix_exam_ranges_workspace_id_created_at_utc_desc ON exam_ranges(workspace_id, created_at_utc DESC);
+                           CREATE INDEX IF NOT EXISTS ix_document_assets_workspace_id_uploaded_at_utc_desc ON document_assets(workspace_id, uploaded_at_utc DESC);
+                           CREATE INDEX IF NOT EXISTS ix_processing_jobs_workspace_id_created_at_utc_desc ON processing_jobs(workspace_id, created_at_utc DESC);
+                           CREATE INDEX IF NOT EXISTS ix_generated_contents_workspace_id_generated_at_utc_desc ON generated_contents(workspace_id, generated_at_utc DESC);
                            """;
 
         await using var command = new NpgsqlCommand(sql, connection);

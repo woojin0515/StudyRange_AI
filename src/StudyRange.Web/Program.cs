@@ -90,7 +90,31 @@ app.MapGet("/health", async (IServiceProvider serviceProvider) =>
         databaseMessage = "InMemory persistence is enabled.";
     }
 
-    var llmConfigured = !string.IsNullOrWhiteSpace(llmOptions.ApiKey) && !string.IsNullOrWhiteSpace(llmOptions.Model);
+    var llmMissing = new List<string>();
+    if (string.IsNullOrWhiteSpace(llmOptions.ApiKey))
+    {
+        llmMissing.Add("ApiKey");
+    }
+
+    if (string.IsNullOrWhiteSpace(llmOptions.Model))
+    {
+        llmMissing.Add("Model");
+    }
+
+    if (string.Equals(llmOptions.Provider, "AzureOpenAI", StringComparison.OrdinalIgnoreCase))
+    {
+        if (string.IsNullOrWhiteSpace(llmOptions.Endpoint))
+        {
+            llmMissing.Add("Endpoint");
+        }
+
+        if (string.IsNullOrWhiteSpace(llmOptions.Deployment))
+        {
+            llmMissing.Add("Deployment");
+        }
+    }
+
+    var llmConfigured = llmMissing.Count == 0;
     var ok = storageWritable && databaseOk && llmConfigured;
     var response = new
     {
@@ -101,7 +125,8 @@ app.MapGet("/health", async (IServiceProvider serviceProvider) =>
             {
                 llmProvider = llmOptions.Provider,
                 llmModel = llmOptions.Model,
-                llmConfigured
+                llmConfigured,
+                llmMissing
             },
             storage = new
             {

@@ -199,6 +199,7 @@ public sealed class StudyCoachService : IStudyCoachService
         Guid workspaceId,
         Guid examRangeId,
         GeneratedContentType contentType,
+        GeneratedContentContextModel context,
         CancellationToken cancellationToken)
     {
         var workspace = await GetWorkspaceOrThrowAsync(workspaceId, cancellationToken);
@@ -208,7 +209,8 @@ public sealed class StudyCoachService : IStudyCoachService
             throw new InvalidOperationException("선택한 시험 범위를 찾을 수 없습니다.");
         }
 
-        var generated = await _studyContentGenerator.GenerateAsync(workspace, examRange, contentType, cancellationToken);
+        ValidateGenerationContext(context);
+        var generated = await _studyContentGenerator.GenerateAsync(workspace, examRange, contentType, context, cancellationToken);
         workspace.AddGeneratedContent(
             examRangeId: examRange.Id,
             subject: examRange.Subject,
@@ -365,6 +367,24 @@ public sealed class StudyCoachService : IStudyCoachService
             SchoolLevel.Middle or SchoolLevel.High => 3,
             _ => 3
         };
+    }
+
+    private static void ValidateGenerationContext(GeneratedContentContextModel context)
+    {
+        if (string.IsNullOrWhiteSpace(context.Subject))
+        {
+            throw new InvalidOperationException("생성 컨텍스트 과목이 비어 있습니다.");
+        }
+
+        if (context.Grade < 1 || context.Grade > GetMaxGradeBySchoolLevel(context.SchoolLevel))
+        {
+            throw new InvalidOperationException("학교급에 맞는 학년을 설정한 뒤 다시 시도하세요.");
+        }
+
+        if (string.IsNullOrWhiteSpace(context.TextbookPublisher))
+        {
+            throw new InvalidOperationException("출판사를 확정한 뒤 다시 시도하세요.");
+        }
     }
 
     private static bool HasAllowedBinarySignature(Stream content)

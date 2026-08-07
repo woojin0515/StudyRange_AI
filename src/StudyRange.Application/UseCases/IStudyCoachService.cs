@@ -26,6 +26,7 @@ public interface IStudyCoachService
         Guid workspaceId,
         Guid examRangeId,
         GeneratedContentType contentType,
+        GeneratedContentContextModel context,
         CancellationToken cancellationToken);
     Task<EducationMetadataBundleModel> CollectEducationMetadataAsync(
         EducationMetadataQueryModel query,

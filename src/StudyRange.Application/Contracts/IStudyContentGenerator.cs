@@ -9,5 +9,6 @@ public interface IStudyContentGenerator
         Workspace workspace,
         ExamRange examRange,
         GeneratedContentType contentType,
+        GeneratedContentContextModel context,
         CancellationToken cancellationToken);
 }

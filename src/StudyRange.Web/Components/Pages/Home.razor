@@ -760,6 +760,7 @@
                 workspaceId,
                 examRangeId,
                 contentType,
+                BuildGenerationContext(),
                 CancellationToken.None);
 
             _generatedContent = result.Content;
@@ -822,6 +823,18 @@
             SchoolLevel.Middle or SchoolLevel.High => 3,
             _ => 3
         };
+    }
+
+    private GeneratedContentContextModel BuildGenerationContext()
+    {
+        return new GeneratedContentContextModel(
+            Subject: ResolveExamRangeSubject(),
+            SchoolLevel: _metadataSchoolLevel,
+            Grade: _metadataGrade,
+            BirthYear: _metadataBirthYear,
+            SchoolName: string.IsNullOrWhiteSpace(_metadataSchoolName) ? null : _metadataSchoolName.Trim(),
+            CurriculumRevision: string.IsNullOrWhiteSpace(_resolvedCurriculumRevision) ? null : _resolvedCurriculumRevision.Trim(),
+            TextbookPublisher: string.IsNullOrWhiteSpace(_resolvedTextbookPublisher) ? null : _resolvedTextbookPublisher.Trim());
     }
 
     private SchoolLevel MetadataSchoolLevel

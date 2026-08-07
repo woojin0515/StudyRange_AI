@@ -17,6 +17,29 @@ public static class DependencyInjection
         services.Configure<PersistenceOptions>(configuration.GetSection(PersistenceOptions.SectionName));
         services.Configure<StorageOptions>(configuration.GetSection(StorageOptions.SectionName));
         services.Configure<LlmOptions>(configuration.GetSection(LlmOptions.SectionName));
+        services.PostConfigure<LlmOptions>(options =>
+        {
+            options.ApiKey = FirstNonEmpty(options.ApiKey,
+                configuration["OPENAI_API_KEY"],
+                configuration["AZURE_OPENAI_API_KEY"],
+                configuration["AZURE_OPENAI_KEY"],
+                configuration["OPENAI_KEY"],
+                configuration["LLM_API_KEY"]);
+
+            options.Endpoint = FirstNonEmpty(options.Endpoint,
+                configuration["OPENAI_BASE_URL"],
+                configuration["AZURE_OPENAI_ENDPOINT"],
+                configuration["OPENAI_ENDPOINT"],
+                configuration["AZURE_OPENAI_BASE_URL"]);
+
+            options.Model = FirstNonEmpty(options.Model,
+                configuration["OPENAI_MODEL"],
+                configuration["AZURE_OPENAI_MODEL"],
+                configuration["LLM_MODEL"]) ?? options.Model;
+
+            options.Deployment = FirstNonEmpty(options.Deployment,
+                configuration["AZURE_OPENAI_DEPLOYMENT"]);
+        });
         services.Configure<OcrOptions>(configuration.GetSection(OcrOptions.SectionName));
         services.Configure<KotryApiOptions>(configuration.GetSection(KotryApiOptions.SectionName));
         services.Configure<NcicApiOptions>(configuration.GetSection(NcicApiOptions.SectionName));
@@ -85,5 +108,37 @@ public static class DependencyInjection
             .AddCheck<DatabaseHealthCheck>("database");
 
         return services;
+    }
+
+    private static string? FirstNonEmpty(params string?[] values)
+    {
+        foreach (var value in values)
+        {
+            var normalized = Normalize(value);
+            if (!string.IsNullOrWhiteSpace(normalized))
+            {
+                return normalized;
+            }
+        }
+
+        return null;
+    }
+
+    private static string? Normalize(string? value)
+    {
+        if (value is null)
+        {
+            return null;
+        }
+
+        var trimmed = value.Trim();
+        if (trimmed.Length >= 2 &&
+            ((trimmed.StartsWith('"') && trimmed.EndsWith('"')) ||
+             (trimmed.StartsWith('\'') && trimmed.EndsWith('\''))))
+        {
+            trimmed = trimmed[1..^1].Trim();
+        }
+
+        return trimmed;
     }
 }

@@ -57,6 +57,18 @@ dotnet run --project src/StudyRange.Web/StudyRange.Web.csproj
 
 - `ApiKey` 필수
 - `Endpoint`, `Deployment`를 함께 넣으면 Azure OpenAI 방식으로 호출
+- 배포 환경에서는 아래 환경변수도 자동 인식  
+  `OPENAI_API_KEY`, `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_KEY`, `OPENAI_KEY`, `LLM_API_KEY`,  
+  `OPENAI_BASE_URL`, `AZURE_OPENAI_ENDPOINT`, `OPENAI_ENDPOINT`, `AZURE_OPENAI_BASE_URL`,  
+  `AZURE_OPENAI_DEPLOYMENT`, `OPENAI_MODEL`, `AZURE_OPENAI_MODEL`, `LLM_MODEL`
+
+- `/health`의 `entries.configuration.llmMissing`으로 누락된 LLM 설정 키를 바로 확인 가능
+
+### 생성 동작(근거 기반)
+
+- 요약/퀴즈 생성은 **교과서 PDF(TextbookPdf) 처리 완료 문서의 시험범위 페이지 텍스트**를 근거로만 생성합니다.
+- 선택 범위 페이지에서 근거 텍스트를 찾지 못하면 생성을 차단하고 오류를 반환합니다.
+- 학교급/학년/출생년도/학교명/출판사/개정년도 메타데이터를 생성 프롬프트에 함께 반영합니다.
 
 ### Persistence
 
