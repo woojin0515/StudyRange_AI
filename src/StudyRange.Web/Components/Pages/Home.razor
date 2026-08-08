@@ -1039,10 +1039,11 @@
             return;
         }
 
-        _examRanges.AddRange(await StudyCoachService.GetExamRangesAsync(workspaceId, CancellationToken.None));
-        _documents.AddRange(await StudyCoachService.GetDocumentsAsync(workspaceId, CancellationToken.None));
-        _jobs.AddRange(await StudyCoachService.GetProcessingJobsAsync(workspaceId, CancellationToken.None));
-        _generatedHistories.AddRange(await StudyCoachService.GetGeneratedContentsAsync(workspaceId, CancellationToken.None));
+        var data = await StudyCoachService.GetWorkspaceDataAsync(workspaceId, CancellationToken.None);
+        _examRanges.AddRange(data.ExamRanges);
+        _documents.AddRange(data.Documents);
+        _jobs.AddRange(data.ProcessingJobs);
+        _generatedHistories.AddRange(data.GeneratedContents);
 
         if (_examRanges.Count > 0 && !Guid.TryParse(_selectedExamRangeId, out _))
         {

@@ -65,6 +65,55 @@ public sealed class StudyCoachService : IStudyCoachService
             RecentWorkspaces: recent);
     }
 
+    public async Task<WorkspaceDataBundleModel> GetWorkspaceDataAsync(Guid workspaceId, CancellationToken cancellationToken)
+    {
+        var workspace = await GetWorkspaceOrThrowAsync(workspaceId, cancellationToken);
+        var jobs = await _processingJobRepository.ListByWorkspaceAsync(workspaceId, cancellationToken);
+
+        var examRanges = workspace.ExamRanges
+            .OrderByDescending(r => r.CreatedAtUtc)
+            .Select(MapExamRange)
+            .ToList();
+
+        var documents = workspace.Documents
+            .OrderByDescending(d => d.UploadedAtUtc)
+            .Select(MapDocument)
+            .ToList();
+
+        var generatedContents = workspace.GeneratedContents
+            .OrderByDescending(x => x.GeneratedAtUtc)
+            .Select(x => new GeneratedContentHistoryModel(
+                Id: x.Id,
+                ExamRangeId: x.ExamRangeId,
+                Subject: x.Subject,
+                StartPage: x.StartPage,
+                EndPage: x.EndPage,
+                ContentType: ParseContentType(x.ContentType),
+                Content: x.Content,
+                Provider: x.Provider,
+                Model: x.Model,
+                GeneratedAtUtc: x.GeneratedAtUtc))
+            .ToList();
+
+        var processingJobs = jobs
+            .OrderByDescending(j => j.CreatedAtUtc)
+            .Select(j => new ProcessingJobModel(
+                j.Id,
+                j.DocumentId,
+                j.Status,
+                j.ErrorMessage,
+                j.CreatedAtUtc,
+                j.StartedAtUtc,
+                j.CompletedAtUtc))
+            .ToList();
+
+        return new WorkspaceDataBundleModel(
+            ExamRanges: examRanges,
+            Documents: documents,
+            ProcessingJobs: processingJobs,
+            GeneratedContents: generatedContents);
+    }
+
     public async Task<WorkspaceModel> CreateWorkspaceAsync(string name, CancellationToken cancellationToken)
     {
         var workspace = new Workspace(Guid.NewGuid(), name, DateTimeOffset.UtcNow);

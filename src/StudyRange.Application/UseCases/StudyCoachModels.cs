@@ -10,6 +10,12 @@ public sealed record DashboardSummaryModel(
     int GeneratedCount,
     IReadOnlyList<WorkspaceModel> RecentWorkspaces);
 
+public sealed record WorkspaceDataBundleModel(
+    IReadOnlyList<ExamRangeModel> ExamRanges,
+    IReadOnlyList<DocumentModel> Documents,
+    IReadOnlyList<ProcessingJobModel> ProcessingJobs,
+    IReadOnlyList<GeneratedContentHistoryModel> GeneratedContents);
+
 public sealed record ExamRangeModel(Guid Id, string Subject, int StartPage, int EndPage, DateTimeOffset CreatedAtUtc);
 
 public sealed record DocumentModel(
