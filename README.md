@@ -41,6 +41,11 @@ Blazor Server 기반 시험 범위 학습 코치 MVP입니다.
 dotnet run --project src/StudyRange.Web/StudyRange.Web.csproj
 ```
 
+## Copilot/Azure MCP 사전 준비
+
+- 클라우드 코딩 에이전트 환경 고정을 위해 `.github/workflows/copilot-setup-steps.yml`를 추가했습니다.
+- 기본적으로 .NET 9 SDK 설치/복원/빌드를 선행해, 화면 개편 작업 전 에이전트 실행 편차를 줄입니다.
+
 ## 주요 설정
 
 ### LLM

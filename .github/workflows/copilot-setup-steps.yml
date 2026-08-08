@@ -1,0 +1,43 @@
+name: Copilot Setup Steps
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    timeout-minutes: 59
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup .NET 9 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Show tool versions
+        shell: bash
+        run: |
+          dotnet --info
+          if command -v az >/dev/null 2>&1; then
+            az version
+          else
+            echo "Azure CLI not found; it can be installed by task-specific setup."
+          fi
+
+      - name: Restore solution
+        shell: bash
+        run: dotnet restore StudyRange_AI.sln
+
+      - name: Build solution
+        shell: bash
+        run: dotnet build StudyRange_AI.sln -v minimal --no-restore
