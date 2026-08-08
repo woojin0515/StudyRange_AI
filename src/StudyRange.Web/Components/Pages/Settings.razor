@@ -14,6 +14,10 @@
 else
 {
     <MudText Typo="Typo.h5">설정</MudText>
+    @if (!string.IsNullOrWhiteSpace(_savedMessage))
+    {
+        <MudAlert Severity="Severity.Success" Dense="true" Class="mt-2">@_savedMessage</MudAlert>
+    }
     <MudGrid Class="mt-3">
         <MudItem xs="12" md="6">
             <MudPaper Outlined="true" Class="pa-4">
@@ -28,6 +32,16 @@ else
                     <MudSelectItem Value="@("상")">상</MudSelectItem>
                 </MudSelect>
                 <MudNumericField T="int" Label="기본 문항 수" @bind-Value="Preferences.QuizQuestionCount" Variant="Variant.Outlined" Min="3" Max="20" Class="mt-3" />
+                <MudDivider Class="my-3" />
+                <MudText Typo="Typo.subtitle2">기본 메타데이터</MudText>
+                <MudSelect T="SchoolLevel" Label="기본 학교급" @bind-Value="Preferences.DefaultSchoolLevel" Variant="Variant.Outlined" Class="mt-2">
+                    <MudSelectItem Value="@SchoolLevel.Elementary">초등학교</MudSelectItem>
+                    <MudSelectItem Value="@SchoolLevel.Middle">중학교</MudSelectItem>
+                    <MudSelectItem Value="@SchoolLevel.High">고등학교</MudSelectItem>
+                </MudSelect>
+                <MudNumericField T="int" Label="기본 학년" @bind-Value="Preferences.DefaultGrade" Variant="Variant.Outlined" Min="1" Max="@GetMaxGrade(Preferences.DefaultSchoolLevel)" Class="mt-3" />
+                <MudTextField @bind-Value="Preferences.DefaultCurriculumRevision" Label="기본 개정년도" Variant="Variant.Outlined" Class="mt-3" />
+                <MudTextField @bind-Value="Preferences.DefaultPublisher" Label="기본 출판사" Variant="Variant.Outlined" Class="mt-3" />
             </MudPaper>
         </MudItem>
         <MudItem xs="12" md="6">
@@ -39,17 +53,41 @@ else
                 <MudText Typo="Typo.caption" Class="text-secondary">
                     현재는 세션 설정입니다. 계정 기반 영구 저장은 인증 도입 단계에서 연결합니다.
                 </MudText>
+                <MudButton Variant="Variant.Text" Href="/profile" Color="Color.Primary" Class="mt-2">프로필 설정 이동</MudButton>
             </MudPaper>
         </MudItem>
     </MudGrid>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="Save">
+        설정 저장
+    </MudButton>
 }
 
 @code {
+    private string? _savedMessage;
+
     protected override void OnInitialized()
     {
         if (!Session.IsAuthenticated)
         {
             Navigation.NavigateTo("/login?returnUrl=/settings", forceLoad: false);
         }
+
+        Preferences.DefaultGrade = Math.Clamp(Preferences.DefaultGrade, 1, GetMaxGrade(Preferences.DefaultSchoolLevel));
+    }
+
+    private void Save()
+    {
+        Preferences.DefaultGrade = Math.Clamp(Preferences.DefaultGrade, 1, GetMaxGrade(Preferences.DefaultSchoolLevel));
+        _savedMessage = "설정을 저장했습니다.";
+    }
+
+    private static int GetMaxGrade(SchoolLevel level)
+    {
+        return level switch
+        {
+            SchoolLevel.Elementary => 6,
+            SchoolLevel.Middle or SchoolLevel.High => 3,
+            _ => 3
+        };
     }
 }

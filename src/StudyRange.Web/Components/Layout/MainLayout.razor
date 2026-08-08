@@ -10,7 +10,13 @@
         <div class="top-row px-4">
             @if (Session.IsAuthenticated)
             {
-                <span>@Session.DisplayName 님 학습 공간</span>
+                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Style="width: 100%;">
+                    <span>@Session.DisplayName 님 학습 공간</span>
+                    <MudStack Row="true" Spacing="1">
+                        <MudButton Variant="Variant.Text" Size="Size.Small" Href="/app">대시보드</MudButton>
+                        <MudButton Variant="Variant.Text" Size="Size.Small" Href="/workspace">워크스페이스</MudButton>
+                    </MudStack>
+                </MudStack>
             }
             else
             {

@@ -27,8 +27,26 @@
     private Task SignInAsync()
     {
         Session.SignIn(_displayName);
-        var target = string.IsNullOrWhiteSpace(ReturnUrl) ? "/app" : ReturnUrl;
+        var target = ResolveReturnUrl(ReturnUrl);
         Navigation.NavigateTo(target);
         return Task.CompletedTask;
+    }
+
+    protected override void OnInitialized()
+    {
+        if (Session.IsAuthenticated)
+        {
+            Navigation.NavigateTo(ResolveReturnUrl(ReturnUrl));
+        }
+    }
+
+    private static string ResolveReturnUrl(string? returnUrl)
+    {
+        if (string.IsNullOrWhiteSpace(returnUrl) || !returnUrl.StartsWith('/'))
+        {
+            return "/app";
+        }
+
+        return returnUrl;
     }
 }

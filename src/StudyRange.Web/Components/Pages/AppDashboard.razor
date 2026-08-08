@@ -1,6 +1,7 @@
 @page "/app"
 @inject UserSessionState Session
 @inject NavigationManager Navigation
+@inject IStudyCoachService StudyCoachService
 
 <PageTitle>앱 대시보드 - StudyRange AI</PageTitle>
 
@@ -16,6 +17,33 @@ else
     <MudText Typo="Typo.body2" Class="text-secondary mt-1">
         최근 학습 워크플로우로 바로 이동하세요.
     </MudText>
+    <MudGrid Class="mt-3">
+        <MudItem xs="6" md="3">
+            <MudPaper Outlined="true" Class="pa-3">
+                <MudText Typo="Typo.caption">워크스페이스</MudText>
+                <MudText Typo="Typo.h6">@_workspaceCount</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" md="3">
+            <MudPaper Outlined="true" Class="pa-3">
+                <MudText Typo="Typo.caption">시험 범위</MudText>
+                <MudText Typo="Typo.h6">@_examRangeCount</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" md="3">
+            <MudPaper Outlined="true" Class="pa-3">
+                <MudText Typo="Typo.caption">문서</MudText>
+                <MudText Typo="Typo.h6">@_documentCount</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="6" md="3">
+            <MudPaper Outlined="true" Class="pa-3">
+                <MudText Typo="Typo.caption">생성 이력</MudText>
+                <MudText Typo="Typo.h6">@_generatedCount</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
     <MudGrid Class="mt-4">
         <MudItem xs="12" md="4">
             <MudPaper Outlined="true" Class="pa-4">
@@ -52,15 +80,73 @@ else
                 <MudButton Variant="Variant.Text" Href="/help" Color="Color.Primary">열기</MudButton>
             </MudPaper>
         </MudItem>
+        <MudItem xs="12" md="4">
+            <MudPaper Outlined="true" Class="pa-4">
+                <MudText Typo="Typo.h6">프로필</MudText>
+                <MudText Typo="Typo.body2">표시 이름과 기본 과목 설정.</MudText>
+                <MudButton Variant="Variant.Text" Href="/profile" Color="Color.Primary">열기</MudButton>
+            </MudPaper>
+        </MudItem>
     </MudGrid>
+
+    @if (_recentWorkspaces.Count > 0)
+    {
+        <MudText Typo="Typo.h6" Class="mt-6">최근 워크스페이스</MudText>
+        <MudTable Items="_recentWorkspaces" Dense="true" Hover="true" Class="mt-2">
+            <HeaderContent>
+                <MudTh>이름</MudTh>
+                <MudTh>생성일</MudTh>
+                <MudTh></MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.Name</MudTd>
+                <MudTd>@context.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</MudTd>
+                <MudTd>
+                    <MudButton Variant="Variant.Text" Color="Color.Primary" Href="@($"/workspace?ws={context.Id}")">열기</MudButton>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
 }
 
 @code {
-    protected override void OnInitialized()
+    private int _workspaceCount;
+    private int _examRangeCount;
+    private int _documentCount;
+    private int _generatedCount;
+    private readonly List<WorkspaceModel> _recentWorkspaces = [];
+
+    protected override async Task OnInitializedAsync()
     {
         if (!Session.IsAuthenticated)
         {
             Navigation.NavigateTo("/login?returnUrl=/app", forceLoad: false);
+            return;
+        }
+
+        await LoadDashboardAsync();
+    }
+
+    private async Task LoadDashboardAsync()
+    {
+        var workspaces = await StudyCoachService.GetWorkspacesAsync(CancellationToken.None);
+        _workspaceCount = workspaces.Count;
+        _examRangeCount = 0;
+        _documentCount = 0;
+        _generatedCount = 0;
+        _recentWorkspaces.Clear();
+        _recentWorkspaces.AddRange(workspaces.Take(5));
+
+        foreach (var workspace in workspaces)
+        {
+            var ranges = await StudyCoachService.GetExamRangesAsync(workspace.Id, CancellationToken.None);
+            _examRangeCount += ranges.Count;
+
+            var docs = await StudyCoachService.GetDocumentsAsync(workspace.Id, CancellationToken.None);
+            _documentCount += docs.Count;
+
+            var histories = await StudyCoachService.GetGeneratedContentsAsync(workspace.Id, CancellationToken.None);
+            _generatedCount += histories.Count;
         }
     }
 }

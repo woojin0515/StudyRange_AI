@@ -20,4 +20,10 @@ public sealed class UserSessionState
         DisplayName = "학생";
         Changed?.Invoke();
     }
+
+    public void UpdateDisplayName(string displayName)
+    {
+        DisplayName = string.IsNullOrWhiteSpace(displayName) ? "학생" : displayName.Trim();
+        Changed?.Invoke();
+    }
 }

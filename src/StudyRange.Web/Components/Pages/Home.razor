@@ -2,6 +2,7 @@
 @inject IStudyCoachService StudyCoachService
 @inject IJSRuntime JsRuntime
 @inject UserSessionState Session
+@inject UserPreferencesState Preferences
 @inject NavigationManager Navigation
 @implements IAsyncDisposable
 
@@ -531,6 +532,9 @@
 </MudStack>
 
 @code {
+    [SupplyParameterFromQuery(Name = "ws")]
+    public string? WorkspaceQuery { get; set; }
+
     private readonly List<WorkspaceModel> _workspaces = [];
     private readonly List<ExamRangeModel> _examRanges = [];
     private readonly List<DocumentModel> _documents = [];
@@ -604,10 +608,19 @@
             return;
         }
 
+        ApplyPreferenceDefaults();
         await ReloadWorkspacesAsync();
         if (_workspaces.Count > 0)
         {
-            _selectedWorkspaceId = _workspaces[0].Id.ToString();
+            if (Guid.TryParse(WorkspaceQuery, out var queryWorkspaceId) &&
+                _workspaces.Any(x => x.Id == queryWorkspaceId))
+            {
+                _selectedWorkspaceId = queryWorkspaceId.ToString();
+            }
+            else
+            {
+                _selectedWorkspaceId = _workspaces[0].Id.ToString();
+            }
             await LoadWorkspaceDataAsync();
         }
 
@@ -843,6 +856,27 @@
             SchoolName: string.IsNullOrWhiteSpace(_metadataSchoolName) ? null : _metadataSchoolName.Trim(),
             CurriculumRevision: string.IsNullOrWhiteSpace(_resolvedCurriculumRevision) ? null : _resolvedCurriculumRevision.Trim(),
             TextbookPublisher: string.IsNullOrWhiteSpace(_resolvedTextbookPublisher) ? null : _resolvedTextbookPublisher.Trim());
+    }
+
+    private void ApplyPreferenceDefaults()
+    {
+        _metadataSchoolLevel = Preferences.DefaultSchoolLevel;
+        _metadataGrade = Math.Clamp(Preferences.DefaultGrade, 1, GetMaxGradeBySchoolLevel(_metadataSchoolLevel));
+
+        if (string.IsNullOrWhiteSpace(_metadataSubject) && !string.IsNullOrWhiteSpace(Preferences.DefaultSubject))
+        {
+            _metadataSubject = Preferences.DefaultSubject.Trim();
+        }
+
+        if (string.IsNullOrWhiteSpace(_resolvedCurriculumRevision) && !string.IsNullOrWhiteSpace(Preferences.DefaultCurriculumRevision))
+        {
+            _resolvedCurriculumRevision = Preferences.DefaultCurriculumRevision.Trim();
+        }
+
+        if (string.IsNullOrWhiteSpace(_resolvedTextbookPublisher) && !string.IsNullOrWhiteSpace(Preferences.DefaultPublisher))
+        {
+            _resolvedTextbookPublisher = Preferences.DefaultPublisher.Trim();
+        }
     }
 
     private SchoolLevel MetadataSchoolLevel

@@ -1,0 +1,50 @@
+@page "/profile"
+@inject UserSessionState Session
+@inject UserPreferencesState Preferences
+@inject NavigationManager Navigation
+
+<PageTitle>프로필 - StudyRange AI</PageTitle>
+
+@if (!Session.IsAuthenticated)
+{
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">
+        로그인 후 이용할 수 있습니다.
+    </MudAlert>
+}
+else
+{
+    <MudText Typo="Typo.h5">프로필</MudText>
+    <MudPaper Outlined="true" Class="pa-4 mt-3">
+        <MudTextField @bind-Value="_displayName" Label="표시 이름" Variant="Variant.Outlined" FullWidth="true" />
+        <MudTextField @bind-Value="Preferences.DefaultSubject" Label="기본 과목" Variant="Variant.Outlined" FullWidth="true" Class="mt-3" />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-3" OnClick="SaveProfile">
+            저장
+        </MudButton>
+        @if (!string.IsNullOrWhiteSpace(_message))
+        {
+            <MudAlert Severity="Severity.Success" Dense="true" Class="mt-3">@_message</MudAlert>
+        }
+    </MudPaper>
+}
+
+@code {
+    private string _displayName = string.Empty;
+    private string? _message;
+
+    protected override void OnInitialized()
+    {
+        if (!Session.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/login?returnUrl=/profile", forceLoad: false);
+            return;
+        }
+
+        _displayName = Session.DisplayName;
+    }
+
+    private void SaveProfile()
+    {
+        Session.UpdateDisplayName(_displayName);
+        _message = "프로필이 저장되었습니다.";
+    }
+}
