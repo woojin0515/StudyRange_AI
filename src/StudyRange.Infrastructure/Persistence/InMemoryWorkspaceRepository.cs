@@ -30,6 +30,11 @@ public sealed class InMemoryWorkspaceRepository : IWorkspaceRepository
         return Task.CompletedTask;
     }
 
+    public Task<bool> ExistsAsync(Guid workspaceId, CancellationToken cancellationToken)
+    {
+        return Task.FromResult(_store.ContainsKey(workspaceId));
+    }
+
     public Task<Workspace?> GetByIdAsync(Guid workspaceId, CancellationToken cancellationToken)
     {
         _store.TryGetValue(workspaceId, out var workspace);
@@ -65,5 +70,44 @@ public sealed class InMemoryWorkspaceRepository : IWorkspaceRepository
             RecentWorkspaces: ordered.Take(Math.Max(recentCount, 0)).ToList());
 
         return Task.FromResult(snapshot);
+    }
+
+    public Task<IReadOnlyList<ExamRange>> ListExamRangesAsync(Guid workspaceId, CancellationToken cancellationToken)
+    {
+        if (!_store.TryGetValue(workspaceId, out var workspace))
+        {
+            return Task.FromResult<IReadOnlyList<ExamRange>>([]);
+        }
+
+        IReadOnlyList<ExamRange> ranges = workspace.ExamRanges
+            .OrderByDescending(x => x.CreatedAtUtc)
+            .ToList();
+        return Task.FromResult(ranges);
+    }
+
+    public Task<IReadOnlyList<DocumentAsset>> ListDocumentsAsync(Guid workspaceId, CancellationToken cancellationToken)
+    {
+        if (!_store.TryGetValue(workspaceId, out var workspace))
+        {
+            return Task.FromResult<IReadOnlyList<DocumentAsset>>([]);
+        }
+
+        IReadOnlyList<DocumentAsset> documents = workspace.Documents
+            .OrderByDescending(x => x.UploadedAtUtc)
+            .ToList();
+        return Task.FromResult(documents);
+    }
+
+    public Task<IReadOnlyList<GeneratedContentArtifact>> ListGeneratedContentsAsync(Guid workspaceId, CancellationToken cancellationToken)
+    {
+        if (!_store.TryGetValue(workspaceId, out var workspace))
+        {
+            return Task.FromResult<IReadOnlyList<GeneratedContentArtifact>>([]);
+        }
+
+        IReadOnlyList<GeneratedContentArtifact> generated = workspace.GeneratedContents
+            .OrderByDescending(x => x.GeneratedAtUtc)
+            .ToList();
+        return Task.FromResult(generated);
     }
 }

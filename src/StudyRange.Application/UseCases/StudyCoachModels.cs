@@ -16,6 +16,10 @@ public sealed record WorkspaceDataBundleModel(
     IReadOnlyList<ProcessingJobModel> ProcessingJobs,
     IReadOnlyList<GeneratedContentHistoryModel> GeneratedContents);
 
+public sealed record WorkspaceProcessingBundleModel(
+    IReadOnlyList<DocumentModel> Documents,
+    IReadOnlyList<ProcessingJobModel> ProcessingJobs);
+
 public sealed record ExamRangeModel(Guid Id, string Subject, int StartPage, int EndPage, DateTimeOffset CreatedAtUtc);
 
 public sealed record DocumentModel(

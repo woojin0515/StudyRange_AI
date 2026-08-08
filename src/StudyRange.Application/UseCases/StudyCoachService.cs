@@ -67,20 +67,26 @@ public sealed class StudyCoachService : IStudyCoachService
 
     public async Task<WorkspaceDataBundleModel> GetWorkspaceDataAsync(Guid workspaceId, CancellationToken cancellationToken)
     {
-        var workspace = await GetWorkspaceOrThrowAsync(workspaceId, cancellationToken);
+        await EnsureWorkspaceExistsAsync(workspaceId, cancellationToken);
+        var examRangesTask = _workspaceRepository.ListExamRangesAsync(workspaceId, cancellationToken);
+        var documentsTask = _workspaceRepository.ListDocumentsAsync(workspaceId, cancellationToken);
+        var generatedContentsTask = _workspaceRepository.ListGeneratedContentsAsync(workspaceId, cancellationToken);
         var jobs = await _processingJobRepository.ListByWorkspaceAsync(workspaceId, cancellationToken);
+        var examRanges = await examRangesTask;
+        var documents = await documentsTask;
+        var generatedContents = await generatedContentsTask;
 
-        var examRanges = workspace.ExamRanges
+        var examRangeModels = examRanges
             .OrderByDescending(r => r.CreatedAtUtc)
             .Select(MapExamRange)
             .ToList();
 
-        var documents = workspace.Documents
+        var documentModels = documents
             .OrderByDescending(d => d.UploadedAtUtc)
             .Select(MapDocument)
             .ToList();
 
-        var generatedContents = workspace.GeneratedContents
+        var generatedContentModels = generatedContents
             .OrderByDescending(x => x.GeneratedAtUtc)
             .Select(x => new GeneratedContentHistoryModel(
                 Id: x.Id,
@@ -108,10 +114,38 @@ public sealed class StudyCoachService : IStudyCoachService
             .ToList();
 
         return new WorkspaceDataBundleModel(
-            ExamRanges: examRanges,
-            Documents: documents,
+            ExamRanges: examRangeModels,
+            Documents: documentModels,
             ProcessingJobs: processingJobs,
-            GeneratedContents: generatedContents);
+            GeneratedContents: generatedContentModels);
+    }
+
+    public async Task<WorkspaceProcessingBundleModel> GetWorkspaceProcessingDataAsync(Guid workspaceId, CancellationToken cancellationToken)
+    {
+        await EnsureWorkspaceExistsAsync(workspaceId, cancellationToken);
+        var documentsTask = _workspaceRepository.ListDocumentsAsync(workspaceId, cancellationToken);
+        var jobsTask = _processingJobRepository.ListByWorkspaceAsync(workspaceId, cancellationToken);
+
+        var documents = (await documentsTask)
+            .OrderByDescending(d => d.UploadedAtUtc)
+            .Select(MapDocument)
+            .ToList();
+
+        var jobs = (await jobsTask)
+            .OrderByDescending(j => j.CreatedAtUtc)
+            .Select(j => new ProcessingJobModel(
+                j.Id,
+                j.DocumentId,
+                j.Status,
+                j.ErrorMessage,
+                j.CreatedAtUtc,
+                j.StartedAtUtc,
+                j.CompletedAtUtc))
+            .ToList();
+
+        return new WorkspaceProcessingBundleModel(
+            Documents: documents,
+            ProcessingJobs: jobs);
     }
 
     public async Task<WorkspaceModel> CreateWorkspaceAsync(string name, CancellationToken cancellationToken)
@@ -134,8 +168,9 @@ public sealed class StudyCoachService : IStudyCoachService
 
     public async Task<IReadOnlyList<ExamRangeModel>> GetExamRangesAsync(Guid workspaceId, CancellationToken cancellationToken)
     {
-        var workspace = await GetWorkspaceOrThrowAsync(workspaceId, cancellationToken);
-        return workspace.ExamRanges
+        await EnsureWorkspaceExistsAsync(workspaceId, cancellationToken);
+        var ranges = await _workspaceRepository.ListExamRangesAsync(workspaceId, cancellationToken);
+        return ranges
             .OrderByDescending(r => r.CreatedAtUtc)
             .Select(MapExamRange)
             .ToList();
@@ -156,8 +191,9 @@ public sealed class StudyCoachService : IStudyCoachService
 
     public async Task<IReadOnlyList<DocumentModel>> GetDocumentsAsync(Guid workspaceId, CancellationToken cancellationToken)
     {
-        var workspace = await GetWorkspaceOrThrowAsync(workspaceId, cancellationToken);
-        return workspace.Documents
+        await EnsureWorkspaceExistsAsync(workspaceId, cancellationToken);
+        var documents = await _workspaceRepository.ListDocumentsAsync(workspaceId, cancellationToken);
+        return documents
             .OrderByDescending(d => d.UploadedAtUtc)
             .Select(MapDocument)
             .ToList();
@@ -238,8 +274,9 @@ public sealed class StudyCoachService : IStudyCoachService
 
     public async Task<IReadOnlyList<GeneratedContentHistoryModel>> GetGeneratedContentsAsync(Guid workspaceId, CancellationToken cancellationToken)
     {
-        var workspace = await GetWorkspaceOrThrowAsync(workspaceId, cancellationToken);
-        return workspace.GeneratedContents
+        await EnsureWorkspaceExistsAsync(workspaceId, cancellationToken);
+        var generatedContents = await _workspaceRepository.ListGeneratedContentsAsync(workspaceId, cancellationToken);
+        return generatedContents
             .OrderByDescending(x => x.GeneratedAtUtc)
             .Select(x => new GeneratedContentHistoryModel(
                 Id: x.Id,
@@ -307,6 +344,14 @@ public sealed class StudyCoachService : IStudyCoachService
     {
         var workspace = await _workspaceRepository.GetByIdAsync(workspaceId, cancellationToken);
         return workspace ?? throw new InvalidOperationException("Workspace not found.");
+    }
+
+    private async Task EnsureWorkspaceExistsAsync(Guid workspaceId, CancellationToken cancellationToken)
+    {
+        if (!await _workspaceRepository.ExistsAsync(workspaceId, cancellationToken))
+        {
+            throw new InvalidOperationException("Workspace not found.");
+        }
     }
 
     private static WorkspaceModel MapWorkspace(Workspace workspace)

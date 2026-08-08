@@ -54,6 +54,18 @@ public sealed class PostgreSqlWorkspaceRepository : IWorkspaceRepository
         _ = await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
+    public async Task<bool> ExistsAsync(Guid workspaceId, CancellationToken cancellationToken)
+    {
+        await using var connection = _connectionFactory.Create();
+        await connection.OpenAsync(cancellationToken);
+
+        const string sql = "SELECT EXISTS(SELECT 1 FROM workspaces WHERE id = @id)";
+        await using var command = new NpgsqlCommand(sql, connection);
+        command.Parameters.AddWithValue("id", workspaceId);
+        var result = await command.ExecuteScalarAsync(cancellationToken);
+        return result is true;
+    }
+
     public async Task<Workspace?> GetByIdAsync(Guid workspaceId, CancellationToken cancellationToken)
     {
         await using var connection = _connectionFactory.Create();
@@ -140,6 +152,103 @@ public sealed class PostgreSqlWorkspaceRepository : IWorkspaceRepository
                 id: reader.GetGuid(0),
                 name: reader.GetString(1),
                 createdAtUtc: reader.GetFieldValue<DateTimeOffset>(2)));
+        }
+
+        return result;
+    }
+
+    public async Task<IReadOnlyList<ExamRange>> ListExamRangesAsync(Guid workspaceId, CancellationToken cancellationToken)
+    {
+        var result = new List<ExamRange>();
+        await using var connection = _connectionFactory.Create();
+        await connection.OpenAsync(cancellationToken);
+
+        const string sql = """
+                           SELECT id, subject, start_page, end_page, created_at_utc
+                           FROM exam_ranges
+                           WHERE workspace_id = @workspace_id
+                           ORDER BY created_at_utc DESC
+                           """;
+        await using var command = new NpgsqlCommand(sql, connection);
+        command.Parameters.AddWithValue("workspace_id", workspaceId);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            result.Add(new ExamRange(
+                id: reader.GetGuid(0),
+                subject: reader.GetString(1),
+                range: new PageRange(reader.GetInt32(2), reader.GetInt32(3)),
+                createdAtUtc: reader.GetFieldValue<DateTimeOffset>(4)));
+        }
+
+        return result;
+    }
+
+    public async Task<IReadOnlyList<DocumentAsset>> ListDocumentsAsync(Guid workspaceId, CancellationToken cancellationToken)
+    {
+        var result = new List<DocumentAsset>();
+        await using var connection = _connectionFactory.Create();
+        await connection.OpenAsync(cancellationToken);
+
+        const string sql = """
+                           SELECT id, workspace_id, document_type, original_file_name, stored_path, size_in_bytes, uploaded_at_utc,
+                                  processing_status, processing_summary
+                           FROM document_assets
+                           WHERE workspace_id = @workspace_id
+                           ORDER BY uploaded_at_utc DESC
+                           """;
+        await using var command = new NpgsqlCommand(sql, connection);
+        command.Parameters.AddWithValue("workspace_id", workspaceId);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            result.Add(DocumentAsset.Rehydrate(
+                id: reader.GetGuid(0),
+                workspaceId: reader.GetGuid(1),
+                documentType: (DocumentType)reader.GetInt32(2),
+                originalFileName: reader.GetString(3),
+                storedPath: reader.GetString(4),
+                sizeInBytes: reader.GetInt64(5),
+                uploadedAtUtc: reader.GetFieldValue<DateTimeOffset>(6),
+                processingStatus: (ProcessingStatus)reader.GetInt32(7),
+                processingSummary: reader.IsDBNull(8) ? null : reader.GetString(8)));
+        }
+
+        return result;
+    }
+
+    public async Task<IReadOnlyList<GeneratedContentArtifact>> ListGeneratedContentsAsync(Guid workspaceId, CancellationToken cancellationToken)
+    {
+        var result = new List<GeneratedContentArtifact>();
+        await using var connection = _connectionFactory.Create();
+        await connection.OpenAsync(cancellationToken);
+
+        const string sql = """
+                           SELECT id, workspace_id, exam_range_id, subject, start_page, end_page, content_type, content, provider, model, generated_at_utc
+                           FROM generated_contents
+                           WHERE workspace_id = @workspace_id
+                           ORDER BY generated_at_utc DESC
+                           """;
+        await using var command = new NpgsqlCommand(sql, connection);
+        command.Parameters.AddWithValue("workspace_id", workspaceId);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            result.Add(new GeneratedContentArtifact(
+                id: reader.GetGuid(0),
+                workspaceId: reader.GetGuid(1),
+                examRangeId: reader.GetGuid(2),
+                subject: reader.GetString(3),
+                startPage: reader.GetInt32(4),
+                endPage: reader.GetInt32(5),
+                contentType: reader.GetString(6),
+                content: reader.GetString(7),
+                provider: reader.GetString(8),
+                model: reader.GetString(9),
+                generatedAtUtc: reader.GetFieldValue<DateTimeOffset>(10)));
         }
 
         return result;

@@ -7,6 +7,7 @@ public interface IStudyCoachService
     Task<IReadOnlyList<WorkspaceModel>> GetWorkspacesAsync(CancellationToken cancellationToken);
     Task<DashboardSummaryModel> GetDashboardSummaryAsync(CancellationToken cancellationToken);
     Task<WorkspaceDataBundleModel> GetWorkspaceDataAsync(Guid workspaceId, CancellationToken cancellationToken);
+    Task<WorkspaceProcessingBundleModel> GetWorkspaceProcessingDataAsync(Guid workspaceId, CancellationToken cancellationToken);
     Task<WorkspaceModel> CreateWorkspaceAsync(string name, CancellationToken cancellationToken);
     Task DeleteWorkspaceAsync(Guid workspaceId, CancellationToken cancellationToken);
     Task<IReadOnlyList<ExamRangeModel>> GetExamRangesAsync(Guid workspaceId, CancellationToken cancellationToken);

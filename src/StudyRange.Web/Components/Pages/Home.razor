@@ -1071,7 +1071,7 @@
                 {
                     if (IsWorkspaceSelected && HasActiveProcessingJobs)
                     {
-                        await LoadWorkspaceDataAsync();
+                        await RefreshProcessingDataAsync();
                         StateHasChanged();
                     }
                 });
@@ -1083,6 +1083,28 @@
             catch
             {
             }
+        }
+    }
+
+    private async Task RefreshProcessingDataAsync()
+    {
+        await _workspaceReloadLock.WaitAsync();
+        try
+        {
+            if (!Guid.TryParse(_selectedWorkspaceId, out var workspaceId))
+            {
+                return;
+            }
+
+            var data = await StudyCoachService.GetWorkspaceProcessingDataAsync(workspaceId, CancellationToken.None);
+            _documents.Clear();
+            _documents.AddRange(data.Documents);
+            _jobs.Clear();
+            _jobs.AddRange(data.ProcessingJobs);
+        }
+        finally
+        {
+            _workspaceReloadLock.Release();
         }
     }
 
