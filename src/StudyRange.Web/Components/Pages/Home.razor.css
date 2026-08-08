@@ -18,6 +18,10 @@
     gap: 1rem;
 }
 
+.hero-top ::deep .mud-button-root {
+    white-space: nowrap;
+}
+
 .summary-card {
     border-radius: 12px;
     padding: 0.85rem 1rem;
@@ -72,4 +76,36 @@
     .workspace-list {
         max-height: 280px;
     }
+
+    .hero-top {
+        align-items: stretch;
+    }
+
+    .align-end {
+        align-items: stretch;
+    }
+
+    .align-end ::deep .mud-button-root {
+        width: 100%;
+    }
+}
+
+@media (max-width: 600px) {
+    .home-shell {
+        padding: 0 0 1rem;
+    }
+
+    .hero-panel,
+    .section-panel {
+        padding: 0.9rem;
+    }
+
+    .summary-card {
+        min-height: 78px;
+        padding: 0.7rem 0.8rem;
+    }
+}
+
+.home-shell ::deep .mud-table-container {
+    overflow-x: auto;
 }

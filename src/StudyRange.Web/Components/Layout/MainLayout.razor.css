@@ -38,11 +38,24 @@ main {
 
 @media (max-width: 640.98px) {
     .top-row {
-        justify-content: space-between;
+        justify-content: flex-start;
+        min-height: 3.5rem;
+        height: auto;
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
     }
 
     .top-row ::deep a, .top-row ::deep .btn-link {
         margin-left: 0;
+    }
+
+    .app-topbar-stack {
+        width: 100%;
+        gap: 0.5rem;
+    }
+
+    .app-topbar-stack ::deep .mud-button-root {
+        flex: 1 1 auto;
     }
 }
 

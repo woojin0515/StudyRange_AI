@@ -13,7 +13,7 @@
 }
 else
 {
-    <MudStack Spacing="2">
+    <MudStack Spacing="2" Class="status-shell">
         <MudText Typo="Typo.h5">상태센터</MudText>
         <MudText Typo="Typo.body2" Class="text-secondary">
             배포 환경의 연동/스토리지/데이터베이스 상태를 확인합니다.
@@ -24,7 +24,7 @@ else
             <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">@_error</MudAlert>
         }
 
-        <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="LoadStatusAsync" Disabled="_loading">
+        <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="LoadStatusAsync" Disabled="_loading" Class="status-refresh">
             새로고침
         </MudButton>
 
@@ -32,13 +32,13 @@ else
         {
             <MudGrid>
                 <MudItem xs="12" md="4">
-                    <MudPaper Outlined="true" Class="pa-4">
+                    <MudPaper Outlined="true" Class="pa-4 status-card">
                         <MudText Typo="Typo.subtitle2">전체 상태</MudText>
                         <MudText Typo="Typo.h6">@_status.Status</MudText>
                     </MudPaper>
                 </MudItem>
                 <MudItem xs="12" md="4">
-                    <MudPaper Outlined="true" Class="pa-4">
+                    <MudPaper Outlined="true" Class="pa-4 status-card">
                         <MudText Typo="Typo.subtitle2">LLM</MudText>
                         <MudText Typo="Typo.body2">Provider: @_status.Entries.Configuration.LlmProvider</MudText>
                         <MudText Typo="Typo.body2">Model: @_status.Entries.Configuration.LlmModel</MudText>
@@ -52,7 +52,7 @@ else
                     </MudPaper>
                 </MudItem>
                 <MudItem xs="12" md="4">
-                    <MudPaper Outlined="true" Class="pa-4">
+                    <MudPaper Outlined="true" Class="pa-4 status-card">
                         <MudText Typo="Typo.subtitle2">스토리지/DB</MudText>
                         <MudText Typo="Typo.body2">Storage Writable: @_status.Entries.Storage.Writable</MudText>
                         <MudText Typo="Typo.body2">DB Provider: @_status.Entries.Database.Provider</MudText>

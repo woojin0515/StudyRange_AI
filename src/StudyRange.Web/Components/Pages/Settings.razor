@@ -13,53 +13,55 @@
 }
 else
 {
-    <MudText Typo="Typo.h5">설정</MudText>
-    @if (!string.IsNullOrWhiteSpace(_savedMessage))
-    {
-        <MudAlert Severity="Severity.Success" Dense="true" Class="mt-2">@_savedMessage</MudAlert>
-    }
-    <MudGrid Class="mt-3">
-        <MudItem xs="12" md="6">
-            <MudPaper Outlined="true" Class="pa-4">
-                <MudText Typo="Typo.h6">학습 기본 설정</MudText>
-                <MudSelect T="string" Label="출력 스타일" @bind-Value="Preferences.PreferredOutputStyle" Variant="Variant.Outlined" Class="mt-3">
-                    <MudSelectItem Value="@("간단")">간단</MudSelectItem>
-                    <MudSelectItem Value="@("상세")">상세</MudSelectItem>
-                </MudSelect>
-                <MudSelect T="string" Label="퀴즈 난이도" @bind-Value="Preferences.QuizDifficulty" Variant="Variant.Outlined" Class="mt-3">
-                    <MudSelectItem Value="@("하")">하</MudSelectItem>
-                    <MudSelectItem Value="@("중")">중</MudSelectItem>
-                    <MudSelectItem Value="@("상")">상</MudSelectItem>
-                </MudSelect>
-                <MudNumericField T="int" Label="기본 문항 수" @bind-Value="Preferences.QuizQuestionCount" Variant="Variant.Outlined" Min="3" Max="20" Class="mt-3" />
-                <MudDivider Class="my-3" />
-                <MudText Typo="Typo.subtitle2">기본 메타데이터</MudText>
-                <MudSelect T="SchoolLevel" Label="기본 학교급" @bind-Value="Preferences.DefaultSchoolLevel" Variant="Variant.Outlined" Class="mt-2">
-                    <MudSelectItem Value="@SchoolLevel.Elementary">초등학교</MudSelectItem>
-                    <MudSelectItem Value="@SchoolLevel.Middle">중학교</MudSelectItem>
-                    <MudSelectItem Value="@SchoolLevel.High">고등학교</MudSelectItem>
-                </MudSelect>
-                <MudNumericField T="int" Label="기본 학년" @bind-Value="Preferences.DefaultGrade" Variant="Variant.Outlined" Min="1" Max="@GetMaxGrade(Preferences.DefaultSchoolLevel)" Class="mt-3" />
-                <MudTextField @bind-Value="Preferences.DefaultCurriculumRevision" Label="기본 개정년도" Variant="Variant.Outlined" Class="mt-3" />
-                <MudTextField @bind-Value="Preferences.DefaultPublisher" Label="기본 출판사" Variant="Variant.Outlined" Class="mt-3" />
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" md="6">
-            <MudPaper Outlined="true" Class="pa-4">
-                <MudText Typo="Typo.h6">앱 동작</MudText>
-                <MudSwitch T="bool" @bind-Value="Preferences.EnableProcessingNotifications" Color="Color.Primary" Class="mt-3">처리 알림 표시</MudSwitch>
-                <MudSwitch T="bool" @bind-Value="Preferences.AutoOpenLatestResult" Color="Color.Primary">생성 완료 시 최신 결과 자동 열기</MudSwitch>
-                <MudDivider Class="my-3" />
-                <MudText Typo="Typo.caption" Class="text-secondary">
-                    현재는 세션 설정입니다. 계정 기반 영구 저장은 인증 도입 단계에서 연결합니다.
-                </MudText>
-                <MudButton Variant="Variant.Text" Href="/profile" Color="Color.Primary" Class="mt-2">프로필 설정 이동</MudButton>
-            </MudPaper>
-        </MudItem>
-    </MudGrid>
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="Save">
-        설정 저장
-    </MudButton>
+    <MudStack Spacing="3" Class="settings-shell">
+        <MudText Typo="Typo.h5">설정</MudText>
+        @if (!string.IsNullOrWhiteSpace(_savedMessage))
+        {
+            <MudAlert Severity="Severity.Success" Dense="true">@_savedMessage</MudAlert>
+        }
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudPaper Outlined="true" Class="pa-4 settings-panel">
+                    <MudText Typo="Typo.h6">학습 기본 설정</MudText>
+                    <MudSelect T="string" Label="출력 스타일" @bind-Value="Preferences.PreferredOutputStyle" Variant="Variant.Outlined" Class="mt-3">
+                        <MudSelectItem Value="@("간단")">간단</MudSelectItem>
+                        <MudSelectItem Value="@("상세")">상세</MudSelectItem>
+                    </MudSelect>
+                    <MudSelect T="string" Label="퀴즈 난이도" @bind-Value="Preferences.QuizDifficulty" Variant="Variant.Outlined" Class="mt-3">
+                        <MudSelectItem Value="@("하")">하</MudSelectItem>
+                        <MudSelectItem Value="@("중")">중</MudSelectItem>
+                        <MudSelectItem Value="@("상")">상</MudSelectItem>
+                    </MudSelect>
+                    <MudNumericField T="int" Label="기본 문항 수" @bind-Value="Preferences.QuizQuestionCount" Variant="Variant.Outlined" Min="3" Max="20" Class="mt-3" />
+                    <MudDivider Class="my-3" />
+                    <MudText Typo="Typo.subtitle2">기본 메타데이터</MudText>
+                    <MudSelect T="SchoolLevel" Label="기본 학교급" @bind-Value="Preferences.DefaultSchoolLevel" Variant="Variant.Outlined" Class="mt-2">
+                        <MudSelectItem Value="@SchoolLevel.Elementary">초등학교</MudSelectItem>
+                        <MudSelectItem Value="@SchoolLevel.Middle">중학교</MudSelectItem>
+                        <MudSelectItem Value="@SchoolLevel.High">고등학교</MudSelectItem>
+                    </MudSelect>
+                    <MudNumericField T="int" Label="기본 학년" @bind-Value="Preferences.DefaultGrade" Variant="Variant.Outlined" Min="1" Max="@GetMaxGrade(Preferences.DefaultSchoolLevel)" Class="mt-3" />
+                    <MudTextField @bind-Value="Preferences.DefaultCurriculumRevision" Label="기본 개정년도" Variant="Variant.Outlined" Class="mt-3" />
+                    <MudTextField @bind-Value="Preferences.DefaultPublisher" Label="기본 출판사" Variant="Variant.Outlined" Class="mt-3" />
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudPaper Outlined="true" Class="pa-4 settings-panel">
+                    <MudText Typo="Typo.h6">앱 동작</MudText>
+                    <MudSwitch T="bool" @bind-Value="Preferences.EnableProcessingNotifications" Color="Color.Primary" Class="mt-3">처리 알림 표시</MudSwitch>
+                    <MudSwitch T="bool" @bind-Value="Preferences.AutoOpenLatestResult" Color="Color.Primary">생성 완료 시 최신 결과 자동 열기</MudSwitch>
+                    <MudDivider Class="my-3" />
+                    <MudText Typo="Typo.caption" Class="text-secondary">
+                        현재는 세션 설정입니다. 계정 기반 영구 저장은 인증 도입 단계에서 연결합니다.
+                    </MudText>
+                    <MudButton Variant="Variant.Text" Href="/profile" Color="Color.Primary" Class="mt-2">프로필 설정 이동</MudButton>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="settings-save" OnClick="Save">
+            설정 저장
+        </MudButton>
+    </MudStack>
 }
 
 @code {

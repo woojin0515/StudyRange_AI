@@ -1,0 +1,13 @@
+.login-shell {
+    max-width: 520px;
+}
+
+.login-panel {
+    border-radius: 12px;
+}
+
+@media (max-width: 600px) {
+    .login-panel {
+        padding: 1.1rem !important;
+    }
+}

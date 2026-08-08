@@ -1,0 +1,15 @@
+.settings-shell {
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+.settings-panel {
+    height: 100%;
+    border-radius: 12px;
+}
+
+@media (max-width: 600px) {
+    .settings-save {
+        width: 100%;
+    }
+}

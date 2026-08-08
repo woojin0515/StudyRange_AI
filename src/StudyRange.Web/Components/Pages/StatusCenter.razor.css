@@ -1,0 +1,14 @@
+.status-shell {
+    max-width: 1200px;
+}
+
+.status-card {
+    height: 100%;
+    border-radius: 12px;
+}
+
+@media (max-width: 600px) {
+    .status-refresh {
+        width: 100%;
+    }
+}

@@ -4,41 +4,43 @@
 
 <PageTitle>StudyRange AI - Home</PageTitle>
 
-<MudPaper Outlined="true" Class="pa-6">
-    <MudText Typo="Typo.h4">시험범위 기반 학습 코치</MudText>
-    <MudText Typo="Typo.body1" Class="mt-2">
-        교과서/학습자료를 기반으로 요약과 퀴즈를 생성하고, 워크스페이스 단위로 학습 히스토리를 관리합니다.
-    </MudText>
-    <MudStack Row="true" Spacing="2" Class="mt-4">
-        @if (Session.IsAuthenticated)
-        {
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/app">앱으로 이동</MudButton>
-            <MudButton Variant="Variant.Outlined" Color="Color.Default" Href="/help">도움말</MudButton>
-        }
-        else
-        {
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/login">로그인 시작</MudButton>
-        }
-    </MudStack>
-</MudPaper>
+<MudStack Spacing="3" Class="landing-shell">
+    <MudPaper Outlined="true" Class="pa-6 landing-hero">
+        <MudText Typo="Typo.h4">시험범위 기반 학습 코치</MudText>
+        <MudText Typo="Typo.body1" Class="mt-2">
+            교과서/학습자료를 기반으로 요약과 퀴즈를 생성하고, 워크스페이스 단위로 학습 히스토리를 관리합니다.
+        </MudText>
+        <MudStack Row="true" Breakpoint="Breakpoint.Sm" Spacing="2" Class="mt-4">
+            @if (Session.IsAuthenticated)
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/app">앱으로 이동</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Default" Href="/help">도움말</MudButton>
+            }
+            else
+            {
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/login">로그인 시작</MudButton>
+            }
+        </MudStack>
+    </MudPaper>
 
-<MudGrid Class="mt-4">
-    <MudItem xs="12" md="4">
-        <MudPaper Outlined="true" Class="pa-4">
-            <MudText Typo="Typo.h6">워크스페이스 관리</MudText>
-            <MudText Typo="Typo.body2">과목/범위/문서를 묶어 학습 단위를 관리합니다.</MudText>
-        </MudPaper>
-    </MudItem>
-    <MudItem xs="12" md="4">
-        <MudPaper Outlined="true" Class="pa-4">
-            <MudText Typo="Typo.h6">근거 기반 생성</MudText>
-            <MudText Typo="Typo.body2">시험범위 페이지 근거로 요약/퀴즈를 생성합니다.</MudText>
-        </MudPaper>
-    </MudItem>
-    <MudItem xs="12" md="4">
-        <MudPaper Outlined="true" Class="pa-4">
-            <MudText Typo="Typo.h6">설정/연동 상태</MudText>
-            <MudText Typo="Typo.body2">학습 선호, API 상태를 한 곳에서 확인합니다.</MudText>
-        </MudPaper>
-    </MudItem>
-</MudGrid>
+    <MudGrid>
+        <MudItem xs="12" md="4">
+            <MudPaper Outlined="true" Class="pa-4 landing-card">
+                <MudText Typo="Typo.h6">워크스페이스 관리</MudText>
+                <MudText Typo="Typo.body2">과목/범위/문서를 묶어 학습 단위를 관리합니다.</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <MudPaper Outlined="true" Class="pa-4 landing-card">
+                <MudText Typo="Typo.h6">근거 기반 생성</MudText>
+                <MudText Typo="Typo.body2">시험범위 페이지 근거로 요약/퀴즈를 생성합니다.</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <MudPaper Outlined="true" Class="pa-4 landing-card">
+                <MudText Typo="Typo.h6">설정/연동 상태</MudText>
+                <MudText Typo="Typo.body2">학습 선호, API 상태를 한 곳에서 확인합니다.</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudStack>

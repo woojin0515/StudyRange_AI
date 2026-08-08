@@ -1,6 +1,5 @@
 @page "/profile"
 @inject UserSessionState Session
-@inject UserPreferencesState Preferences
 @inject NavigationManager Navigation
 
 <PageTitle>프로필 - StudyRange AI</PageTitle>
@@ -13,17 +12,19 @@
 }
 else
 {
-    <MudText Typo="Typo.h5">프로필</MudText>
-    <MudPaper Outlined="true" Class="pa-4 mt-3">
-        <MudTextField @bind-Value="_displayName" Label="표시 이름" Variant="Variant.Outlined" FullWidth="true" />
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-3" OnClick="SaveProfile">
-            저장
-        </MudButton>
-        @if (!string.IsNullOrWhiteSpace(_message))
-        {
-            <MudAlert Severity="Severity.Success" Dense="true" Class="mt-3">@_message</MudAlert>
-        }
-    </MudPaper>
+    <MudStack Spacing="3" Class="profile-shell">
+        <MudText Typo="Typo.h5">프로필</MudText>
+        <MudPaper Outlined="true" Class="pa-4 profile-panel">
+            <MudTextField @bind-Value="_displayName" Label="표시 이름" Variant="Variant.Outlined" FullWidth="true" />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-3 profile-save" OnClick="SaveProfile">
+                저장
+            </MudButton>
+            @if (!string.IsNullOrWhiteSpace(_message))
+            {
+                <MudAlert Severity="Severity.Success" Dense="true" Class="mt-3">@_message</MudAlert>
+            }
+        </MudPaper>
+    </MudStack>
 }
 
 @code {

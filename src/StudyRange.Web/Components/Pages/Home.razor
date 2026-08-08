@@ -10,7 +10,7 @@
 
 <MudStack Spacing="3" Class="home-shell">
     <MudPaper Elevation="0" Outlined="true" Class="hero-panel">
-        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="hero-top">
+        <MudStack Row="true" Breakpoint="Breakpoint.Sm" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="hero-top">
             <div>
                 <MudText Typo="Typo.h4">StudyRange AI</MudText>
                 <MudText Typo="Typo.body2" Class="text-secondary">
@@ -137,7 +137,7 @@
                     <MudGrid Class="mt-2">
                         <MudItem xs="12">
                             <MudText Typo="Typo.caption" Class="text-secondary">문서 종류</MudText>
-                            <MudStack Row="true" Spacing="1" Class="mt-1">
+                            <MudStack Row="true" Breakpoint="Breakpoint.Xs" Spacing="1" Class="mt-1">
                                 <MudButton Variant="@(_selectedDocumentType == DocumentType.TextbookPdf ? Variant.Filled : Variant.Outlined)"
                                            Color="Color.Primary"
                                            OnClick="@(() => _selectedDocumentType = DocumentType.TextbookPdf)">
@@ -210,7 +210,7 @@
         {
             <MudDivider Class="my-3" />
             <MudText Typo="Typo.subtitle2">소스 상태</MudText>
-            <MudTable Items="_sourceStatuses" Dense="true" Hover="true" Class="mt-1">
+            <MudTable Items="_sourceStatuses" Dense="true" Hover="true" Class="mt-1" Breakpoint="Breakpoint.Sm">
                 <HeaderContent>
                     <MudTh>소스</MudTh>
                     <MudTh>성공</MudTh>
@@ -227,7 +227,7 @@
         @if (_curriculumResults.Count > 0)
         {
             <MudText Typo="Typo.subtitle2" Class="mt-3">교육과정</MudText>
-            <MudTable Items="_curriculumResults" Dense="true" Hover="true">
+            <MudTable Items="_curriculumResults" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm">
                 <HeaderContent>
                     <MudTh>개정</MudTh>
                     <MudTh>표시명</MudTh>
@@ -246,7 +246,7 @@
         @if (_textbookResults.Count > 0)
         {
             <MudText Typo="Typo.subtitle2" Class="mt-3">교과서</MudText>
-            <MudTable Items="_textbookResults" Dense="true" Hover="true">
+            <MudTable Items="_textbookResults" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm">
                 <HeaderContent>
                     <MudTh>과목</MudTh>
                     <MudTh>출판사</MudTh>
@@ -267,7 +267,7 @@
         @if (_schoolFactResults.Count > 0)
         {
             <MudText Typo="Typo.subtitle2" Class="mt-3">학교 맥락</MudText>
-            <MudTable Items="_schoolFactResults" Dense="true" Hover="true">
+            <MudTable Items="_schoolFactResults" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm">
                 <HeaderContent>
                     <MudTh>키</MudTh>
                     <MudTh>값</MudTh>
@@ -338,7 +338,7 @@
         <MudGrid Class="mt-2">
             <MudItem xs="12" md="8">
                 <MudText Typo="Typo.subtitle2">시험 범위 선택</MudText>
-                <MudTable Items="_examRanges" Dense="true" Hover="true" Class="mt-1">
+                <MudTable Items="_examRanges" Dense="true" Hover="true" Class="mt-1" Breakpoint="Breakpoint.Sm">
                     <HeaderContent>
                         <MudTh>과목</MudTh>
                         <MudTh>범위</MudTh>
@@ -388,7 +388,7 @@
         @if (!string.IsNullOrWhiteSpace(_generatedContent))
         {
             <MudDivider Class="my-3" />
-            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
+            <MudStack Row="true" Breakpoint="Breakpoint.Sm" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween">
                 <MudText Typo="Typo.caption">Provider: @_generatedProvider / Model: @_generatedModel</MudText>
                 <MudButton Variant="Variant.Outlined"
                            Size="Size.Small"
@@ -407,7 +407,7 @@
         @if (_generatedHistories.Count > 0)
         {
             <MudDivider Class="my-3" />
-            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+            <MudStack Row="true" Breakpoint="Breakpoint.Sm" AlignItems="AlignItems.Center" Spacing="2">
                 <MudText Typo="Typo.subtitle2">생성 이력</MudText>
                 <MudSelect T="string" @bind-Value="_historyFilter" Variant="Variant.Outlined" Dense="true" Margin="Margin.Dense" Style="min-width: 160px;">
                     <MudSelectItem Value="@("All")">전체</MudSelectItem>
@@ -415,7 +415,7 @@
                     <MudSelectItem Value="@("Quiz")">퀴즈</MudSelectItem>
                 </MudSelect>
             </MudStack>
-            <MudTable Items="FilteredGeneratedHistories" Dense="true" Hover="true" Class="mt-2">
+            <MudTable Items="FilteredGeneratedHistories" Dense="true" Hover="true" Class="mt-2" Breakpoint="Breakpoint.Sm">
                 <HeaderContent>
                     <MudTh>유형</MudTh>
                     <MudTh>범위</MudTh>
@@ -435,7 +435,7 @@
                         </MudTooltip>
                     </MudTd>
                     <MudTd>
-                        <MudStack Row="true" Spacing="1">
+                        <MudStack Row="true" Breakpoint="Breakpoint.Xs" Spacing="1">
                             <MudButton Variant="Variant.Outlined"
                                        Size="Size.Small"
                                        Color="Color.Primary"
@@ -469,7 +469,7 @@
         <MudItem xs="12">
             <MudPaper Elevation="0" Outlined="true" Class="section-panel">
                 <MudText Typo="Typo.h6">문서 / 처리 작업</MudText>
-                <MudTable Items="_documents" Dense="true" Hover="true" Class="mt-2">
+                <MudTable Items="_documents" Dense="true" Hover="true" Class="mt-2" Breakpoint="Breakpoint.Sm">
                     <HeaderContent>
                         <MudTh>파일명</MudTh>
                         <MudTh>종류</MudTh>
@@ -484,7 +484,7 @@
 
                 <MudDivider Class="my-3" />
 
-                <MudTable Items="_jobs" Dense="true" Hover="true">
+                <MudTable Items="_jobs" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm">
                     <HeaderContent>
                         <MudTh>Job</MudTh>
                         <MudTh>상태</MudTh>

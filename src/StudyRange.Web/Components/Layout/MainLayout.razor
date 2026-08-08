@@ -7,12 +7,12 @@
     </div>
 
     <main>
-        <div class="top-row px-4">
+        <div class="top-row px-4 app-top-row">
             @if (Session.IsAuthenticated)
             {
-                <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Style="width: 100%;">
+                <MudStack Row="true" Breakpoint="Breakpoint.Sm" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="app-topbar-stack">
                     <span>@Session.DisplayName 님 학습 공간</span>
-                    <MudStack Row="true" Spacing="1">
+                    <MudStack Row="true" Spacing="1" Breakpoint="Breakpoint.Sm">
                         <MudButton Variant="Variant.Text" Size="Size.Small" Href="/app">대시보드</MudButton>
                         <MudButton Variant="Variant.Text" Size="Size.Small" Href="/workspace">워크스페이스</MudButton>
                     </MudStack>

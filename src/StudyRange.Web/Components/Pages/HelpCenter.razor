@@ -12,31 +12,33 @@
 }
 else
 {
-    <MudText Typo="Typo.h5">도움말 센터</MudText>
-    <MudText Typo="Typo.body2" Class="text-secondary mt-1">
-        자주 발생하는 오류를 빠르게 해결할 수 있는 가이드입니다.
-    </MudText>
+    <MudStack Spacing="2" Class="help-shell">
+        <MudText Typo="Typo.h5">도움말 센터</MudText>
+        <MudText Typo="Typo.body2" Class="text-secondary">
+            자주 발생하는 오류를 빠르게 해결할 수 있는 가이드입니다.
+        </MudText>
 
-    <MudExpansionPanels Class="mt-4">
-        <MudExpansionPanel Text="요약/퀴즈 생성이 안 될 때">
-            <MudText Typo="Typo.body2">
-                1) 메타데이터 조회에서 출판사를 확정했는지 확인합니다.
-                2) 교과서 PDF가 없으면 자동 카탈로그/원격 API 설정을 확인합니다.
-                3) 상태센터에서 LLM/스토리지 상태를 점검합니다.
-            </MudText>
-        </MudExpansionPanel>
-        <MudExpansionPanel Text="교과서 자동 로드가 안 될 때">
-            <MudText Typo="Typo.body2">
-                파일명 규칙 `(개정년도)_(과목)_(출판사).pdf`를 맞춰 `App_Data/textbook-catalog`에 저장하거나
-                `EducationApis:TextbookPdf`의 `HttpTemplate` 설정을 점검하세요.
-            </MudText>
-        </MudExpansionPanel>
-        <MudExpansionPanel Text="문서 업로드가 실패할 때">
-            <MudText Typo="Typo.body2">
-                파일 형식(PDF/PNG/JPG/JPEG/WEBP)과 25MB 제한을 확인하세요.
-            </MudText>
-        </MudExpansionPanel>
-    </MudExpansionPanels>
+        <MudExpansionPanels Class="help-panels">
+            <MudExpansionPanel Text="요약/퀴즈 생성이 안 될 때">
+                <MudText Typo="Typo.body2">
+                    1) 메타데이터 조회에서 출판사를 확정했는지 확인합니다.
+                    2) 교과서 PDF가 없으면 자동 카탈로그/원격 API 설정을 확인합니다.
+                    3) 상태센터에서 LLM/스토리지 상태를 점검합니다.
+                </MudText>
+            </MudExpansionPanel>
+            <MudExpansionPanel Text="교과서 자동 로드가 안 될 때">
+                <MudText Typo="Typo.body2">
+                    파일명 규칙 `(개정년도)_(과목)_(출판사).pdf`를 맞춰 `App_Data/textbook-catalog`에 저장하거나
+                    `EducationApis:TextbookPdf`의 `HttpTemplate` 설정을 점검하세요.
+                </MudText>
+            </MudExpansionPanel>
+            <MudExpansionPanel Text="문서 업로드가 실패할 때">
+                <MudText Typo="Typo.body2">
+                    파일 형식(PDF/PNG/JPG/JPEG/WEBP)과 25MB 제한을 확인하세요.
+                </MudText>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+    </MudStack>
 }
 
 @code {

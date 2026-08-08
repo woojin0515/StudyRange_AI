@@ -1,0 +1,13 @@
+.profile-shell {
+    max-width: 760px;
+}
+
+.profile-panel {
+    border-radius: 12px;
+}
+
+@media (max-width: 600px) {
+    .profile-save {
+        width: 100%;
+    }
+}

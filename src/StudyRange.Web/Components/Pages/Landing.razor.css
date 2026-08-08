@@ -1,0 +1,19 @@
+.landing-shell {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.landing-hero,
+.landing-card {
+    border-radius: 12px;
+}
+
+.landing-card {
+    height: 100%;
+}
+
+@media (max-width: 600px) {
+    .landing-hero {
+        padding: 1.1rem !important;
+    }
+}

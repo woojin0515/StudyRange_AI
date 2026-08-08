@@ -13,100 +13,104 @@
 }
 else
 {
-    <MudText Typo="Typo.h5">안녕하세요, @Session.DisplayName 님</MudText>
-    <MudText Typo="Typo.body2" Class="text-secondary mt-1">
-        최근 학습 워크플로우로 바로 이동하세요.
-    </MudText>
-    <MudGrid Class="mt-3">
-        <MudItem xs="6" md="3">
-            <MudPaper Outlined="true" Class="pa-3">
-                <MudText Typo="Typo.caption">워크스페이스</MudText>
-                <MudText Typo="Typo.h6">@_workspaceCount</MudText>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="6" md="3">
-            <MudPaper Outlined="true" Class="pa-3">
-                <MudText Typo="Typo.caption">시험 범위</MudText>
-                <MudText Typo="Typo.h6">@_examRangeCount</MudText>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="6" md="3">
-            <MudPaper Outlined="true" Class="pa-3">
-                <MudText Typo="Typo.caption">문서</MudText>
-                <MudText Typo="Typo.h6">@_documentCount</MudText>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="6" md="3">
-            <MudPaper Outlined="true" Class="pa-3">
-                <MudText Typo="Typo.caption">생성 이력</MudText>
-                <MudText Typo="Typo.h6">@_generatedCount</MudText>
-            </MudPaper>
-        </MudItem>
-    </MudGrid>
+    <MudStack Spacing="3" Class="dashboard-shell">
+        <div>
+            <MudText Typo="Typo.h5">안녕하세요, @Session.DisplayName 님</MudText>
+            <MudText Typo="Typo.body2" Class="text-secondary mt-1">
+                최근 학습 워크플로우로 바로 이동하세요.
+            </MudText>
+        </div>
+        <MudGrid>
+            <MudItem xs="6" md="3">
+                <MudPaper Outlined="true" Class="pa-3 dashboard-card">
+                    <MudText Typo="Typo.caption">워크스페이스</MudText>
+                    <MudText Typo="Typo.h6">@_workspaceCount</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" md="3">
+                <MudPaper Outlined="true" Class="pa-3 dashboard-card">
+                    <MudText Typo="Typo.caption">시험 범위</MudText>
+                    <MudText Typo="Typo.h6">@_examRangeCount</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" md="3">
+                <MudPaper Outlined="true" Class="pa-3 dashboard-card">
+                    <MudText Typo="Typo.caption">문서</MudText>
+                    <MudText Typo="Typo.h6">@_documentCount</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="6" md="3">
+                <MudPaper Outlined="true" Class="pa-3 dashboard-card">
+                    <MudText Typo="Typo.caption">생성 이력</MudText>
+                    <MudText Typo="Typo.h6">@_generatedCount</MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
 
-    <MudGrid Class="mt-4">
-        <MudItem xs="12" md="4">
-            <MudPaper Outlined="true" Class="pa-4">
-                <MudText Typo="Typo.h6">워크스페이스</MudText>
-                <MudText Typo="Typo.body2">시험범위/문서/생성을 관리합니다.</MudText>
-                <MudButton Variant="Variant.Text" Href="/workspace" Color="Color.Primary">열기</MudButton>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" md="4">
-            <MudPaper Outlined="true" Class="pa-4">
-                <MudText Typo="Typo.h6">생성 이력</MudText>
-                <MudText Typo="Typo.body2">최근 결과 확인 및 재활용.</MudText>
-                <MudButton Variant="Variant.Text" Href="/workspace" Color="Color.Primary">열기</MudButton>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" md="4">
-            <MudPaper Outlined="true" Class="pa-4">
-                <MudText Typo="Typo.h6">설정</MudText>
-                <MudText Typo="Typo.body2">학습/알림/연동 상태 설정.</MudText>
-                <MudButton Variant="Variant.Text" Href="/settings" Color="Color.Primary">열기</MudButton>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" md="4">
-            <MudPaper Outlined="true" Class="pa-4">
-                <MudText Typo="Typo.h6">상태센터</MudText>
-                <MudText Typo="Typo.body2">연동/스토리지/DB 상태와 이슈 해결 가이드.</MudText>
-                <MudButton Variant="Variant.Text" Href="/status" Color="Color.Primary">열기</MudButton>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" md="4">
-            <MudPaper Outlined="true" Class="pa-4">
-                <MudText Typo="Typo.h6">도움말</MudText>
-                <MudText Typo="Typo.body2">자주 겪는 생성 실패/업로드 실패 해결 방법.</MudText>
-                <MudButton Variant="Variant.Text" Href="/help" Color="Color.Primary">열기</MudButton>
-            </MudPaper>
-        </MudItem>
-        <MudItem xs="12" md="4">
-            <MudPaper Outlined="true" Class="pa-4">
-                <MudText Typo="Typo.h6">프로필</MudText>
-                <MudText Typo="Typo.body2">표시 이름과 기본 과목 설정.</MudText>
-                <MudButton Variant="Variant.Text" Href="/profile" Color="Color.Primary">열기</MudButton>
-            </MudPaper>
-        </MudItem>
-    </MudGrid>
+        <MudGrid>
+            <MudItem xs="12" md="4">
+                <MudPaper Outlined="true" Class="pa-4 dashboard-card">
+                    <MudText Typo="Typo.h6">워크스페이스</MudText>
+                    <MudText Typo="Typo.body2">시험범위/문서/생성을 관리합니다.</MudText>
+                    <MudButton Variant="Variant.Text" Href="/workspace" Color="Color.Primary">열기</MudButton>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudPaper Outlined="true" Class="pa-4 dashboard-card">
+                    <MudText Typo="Typo.h6">생성 이력</MudText>
+                    <MudText Typo="Typo.body2">최근 결과 확인 및 재활용.</MudText>
+                    <MudButton Variant="Variant.Text" Href="/workspace" Color="Color.Primary">열기</MudButton>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudPaper Outlined="true" Class="pa-4 dashboard-card">
+                    <MudText Typo="Typo.h6">설정</MudText>
+                    <MudText Typo="Typo.body2">학습/알림/연동 상태 설정.</MudText>
+                    <MudButton Variant="Variant.Text" Href="/settings" Color="Color.Primary">열기</MudButton>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudPaper Outlined="true" Class="pa-4 dashboard-card">
+                    <MudText Typo="Typo.h6">상태센터</MudText>
+                    <MudText Typo="Typo.body2">연동/스토리지/DB 상태와 이슈 해결 가이드.</MudText>
+                    <MudButton Variant="Variant.Text" Href="/status" Color="Color.Primary">열기</MudButton>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudPaper Outlined="true" Class="pa-4 dashboard-card">
+                    <MudText Typo="Typo.h6">도움말</MudText>
+                    <MudText Typo="Typo.body2">자주 겪는 생성 실패/업로드 실패 해결 방법.</MudText>
+                    <MudButton Variant="Variant.Text" Href="/help" Color="Color.Primary">열기</MudButton>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudPaper Outlined="true" Class="pa-4 dashboard-card">
+                    <MudText Typo="Typo.h6">프로필</MudText>
+                    <MudText Typo="Typo.body2">표시 이름 관리.</MudText>
+                    <MudButton Variant="Variant.Text" Href="/profile" Color="Color.Primary">열기</MudButton>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
 
-    @if (_recentWorkspaces.Count > 0)
-    {
-        <MudText Typo="Typo.h6" Class="mt-6">최근 워크스페이스</MudText>
-        <MudTable Items="_recentWorkspaces" Dense="true" Hover="true" Class="mt-2">
-            <HeaderContent>
-                <MudTh>이름</MudTh>
-                <MudTh>생성일</MudTh>
-                <MudTh></MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd>@context.Name</MudTd>
-                <MudTd>@context.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</MudTd>
-                <MudTd>
-                    <MudButton Variant="Variant.Text" Color="Color.Primary" Href="@($"/workspace?ws={context.Id}")">열기</MudButton>
-                </MudTd>
-            </RowTemplate>
-        </MudTable>
-    }
+        @if (_recentWorkspaces.Count > 0)
+        {
+            <MudText Typo="Typo.h6">최근 워크스페이스</MudText>
+            <MudTable Items="_recentWorkspaces" Dense="true" Hover="true" Breakpoint="Breakpoint.Sm">
+                <HeaderContent>
+                    <MudTh>이름</MudTh>
+                    <MudTh>생성일</MudTh>
+                    <MudTh></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.Name</MudTd>
+                    <MudTd>@context.CreatedAtUtc.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</MudTd>
+                    <MudTd>
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" Href="@($"/workspace?ws={context.Id}")">열기</MudButton>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </MudStack>
 }
 
 @code {
