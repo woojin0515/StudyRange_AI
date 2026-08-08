@@ -46,6 +46,7 @@ dotnet run --project src/StudyRange.Web/StudyRange.Web.csproj
 - 클라우드 코딩 에이전트 환경 고정을 위해 `.github/workflows/copilot-setup-steps.yml`를 추가했습니다.
 - 기본적으로 .NET 9 SDK 설치/복원/빌드를 선행해, 화면 개편 작업 전 에이전트 실행 편차를 줄입니다.
 - UI/UX 개편용 커스텀 스킬 문서를 `.github/skills/ui-ux-design/SKILL.md`에 추가했습니다.
+- UI/UX 구현 규칙 문서는 `docs/ui-ux-guidelines.md`를 기준으로 유지합니다.
 
 ## 주요 설정
 
