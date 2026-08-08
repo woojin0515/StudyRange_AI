@@ -133,24 +133,12 @@ else
 
     private async Task LoadDashboardAsync()
     {
-        var workspaces = await StudyCoachService.GetWorkspacesAsync(CancellationToken.None);
-        _workspaceCount = workspaces.Count;
-        _examRangeCount = 0;
-        _documentCount = 0;
-        _generatedCount = 0;
+        var summary = await StudyCoachService.GetDashboardSummaryAsync(CancellationToken.None);
+        _workspaceCount = summary.WorkspaceCount;
+        _examRangeCount = summary.ExamRangeCount;
+        _documentCount = summary.DocumentCount;
+        _generatedCount = summary.GeneratedCount;
         _recentWorkspaces.Clear();
-        _recentWorkspaces.AddRange(workspaces.Take(5));
-
-        foreach (var workspace in workspaces)
-        {
-            var ranges = await StudyCoachService.GetExamRangesAsync(workspace.Id, CancellationToken.None);
-            _examRangeCount += ranges.Count;
-
-            var docs = await StudyCoachService.GetDocumentsAsync(workspace.Id, CancellationToken.None);
-            _documentCount += docs.Count;
-
-            var histories = await StudyCoachService.GetGeneratedContentsAsync(workspace.Id, CancellationToken.None);
-            _generatedCount += histories.Count;
-        }
+        _recentWorkspaces.AddRange(summary.RecentWorkspaces);
     }
 }

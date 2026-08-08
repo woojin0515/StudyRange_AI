@@ -5,6 +5,7 @@ namespace StudyRange.Application.UseCases;
 public interface IStudyCoachService
 {
     Task<IReadOnlyList<WorkspaceModel>> GetWorkspacesAsync(CancellationToken cancellationToken);
+    Task<DashboardSummaryModel> GetDashboardSummaryAsync(CancellationToken cancellationToken);
     Task<WorkspaceModel> CreateWorkspaceAsync(string name, CancellationToken cancellationToken);
     Task DeleteWorkspaceAsync(Guid workspaceId, CancellationToken cancellationToken);
     Task<IReadOnlyList<ExamRangeModel>> GetExamRangesAsync(Guid workspaceId, CancellationToken cancellationToken);

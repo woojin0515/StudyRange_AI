@@ -50,6 +50,26 @@ public sealed class StudyCoachService : IStudyCoachService
             .ToList();
     }
 
+    public async Task<DashboardSummaryModel> GetDashboardSummaryAsync(CancellationToken cancellationToken)
+    {
+        var workspaces = await _workspaceRepository.ListAsync(cancellationToken);
+        var orderedWorkspaces = workspaces
+            .OrderByDescending(w => w.CreatedAtUtc)
+            .ToList();
+
+        var recent = orderedWorkspaces
+            .Take(5)
+            .Select(MapWorkspace)
+            .ToList();
+
+        return new DashboardSummaryModel(
+            WorkspaceCount: orderedWorkspaces.Count,
+            ExamRangeCount: orderedWorkspaces.Sum(w => w.ExamRanges.Count),
+            DocumentCount: orderedWorkspaces.Sum(w => w.Documents.Count),
+            GeneratedCount: orderedWorkspaces.Sum(w => w.GeneratedContents.Count),
+            RecentWorkspaces: recent);
+    }
+
     public async Task<WorkspaceModel> CreateWorkspaceAsync(string name, CancellationToken cancellationToken)
     {
         var workspace = new Workspace(Guid.NewGuid(), name, DateTimeOffset.UtcNow);

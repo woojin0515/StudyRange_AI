@@ -17,6 +17,7 @@ body {
     font-family: "Inter", "Noto Sans KR", "Helvetica Neue", Helvetica, Arial, sans-serif;
     background: var(--sr-bg);
     color: var(--sr-text);
+    line-height: 1.5;
 }
 
 a,
@@ -31,6 +32,7 @@ a:hover,
 
 .content {
     padding-top: 1.1rem;
+    padding-bottom: 1.25rem;
 }
 
 h1:focus {
@@ -94,6 +96,18 @@ h1:focus {
     font-weight: 600;
 }
 
+.mud-typography {
+    line-height: 1.55;
+}
+
+.mud-paper .mud-typography + .mud-typography {
+    margin-top: 0.35rem;
+}
+
+.mud-paper .mud-typography + .mud-button-root {
+    margin-top: 0.5rem;
+}
+
 .mud-input-control-input-container .mud-input-outlined-border {
     border-color: var(--sr-border);
 }
@@ -119,6 +133,8 @@ h1:focus {
     width: 100%;
     max-width: 1280px;
     margin: 0 auto;
+    padding-left: 0.35rem;
+    padding-right: 0.35rem;
 }
 
 .sr-shell-lg {
@@ -162,4 +178,11 @@ h1:focus {
     overflow: hidden;
     clip: rect(0, 0, 0, 0);
     border: 0;
+}
+
+@media (max-width: 600px) {
+    .sr-shell {
+        padding-left: 0.2rem;
+        padding-right: 0.2rem;
+    }
 }
