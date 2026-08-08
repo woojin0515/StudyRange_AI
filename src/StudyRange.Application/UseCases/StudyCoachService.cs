@@ -52,21 +52,16 @@ public sealed class StudyCoachService : IStudyCoachService
 
     public async Task<DashboardSummaryModel> GetDashboardSummaryAsync(CancellationToken cancellationToken)
     {
-        var workspaces = await _workspaceRepository.ListAsync(cancellationToken);
-        var orderedWorkspaces = workspaces
-            .OrderByDescending(w => w.CreatedAtUtc)
-            .ToList();
-
-        var recent = orderedWorkspaces
-            .Take(5)
+        var snapshot = await _workspaceRepository.GetDashboardSnapshotAsync(recentCount: 5, cancellationToken);
+        var recent = snapshot.RecentWorkspaces
             .Select(MapWorkspace)
             .ToList();
 
         return new DashboardSummaryModel(
-            WorkspaceCount: orderedWorkspaces.Count,
-            ExamRangeCount: orderedWorkspaces.Sum(w => w.ExamRanges.Count),
-            DocumentCount: orderedWorkspaces.Sum(w => w.Documents.Count),
-            GeneratedCount: orderedWorkspaces.Sum(w => w.GeneratedContents.Count),
+            WorkspaceCount: snapshot.WorkspaceCount,
+            ExamRangeCount: snapshot.ExamRangeCount,
+            DocumentCount: snapshot.DocumentCount,
+            GeneratedCount: snapshot.GeneratedCount,
             RecentWorkspaces: recent);
     }
 

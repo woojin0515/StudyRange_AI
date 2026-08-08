@@ -119,6 +119,63 @@ public sealed class PostgreSqlWorkspaceRepository : IWorkspaceRepository
         return result;
     }
 
+    public async Task<WorkspaceDashboardSnapshot> GetDashboardSnapshotAsync(int recentCount, CancellationToken cancellationToken)
+    {
+        await using var connection = _connectionFactory.Create();
+        await connection.OpenAsync(cancellationToken);
+
+        const string aggregateSql = """
+                                    SELECT
+                                        (SELECT COUNT(*) FROM workspaces)::int AS workspace_count,
+                                        (SELECT COUNT(*) FROM exam_ranges)::int AS exam_range_count,
+                                        (SELECT COUNT(*) FROM document_assets)::int AS document_count,
+                                        (SELECT COUNT(*) FROM generated_contents)::int AS generated_count
+                                    """;
+        await using var aggregateCommand = new NpgsqlCommand(aggregateSql, connection);
+        await using var aggregateReader = await aggregateCommand.ExecuteReaderAsync(cancellationToken);
+
+        var workspaceCount = 0;
+        var examRangeCount = 0;
+        var documentCount = 0;
+        var generatedCount = 0;
+
+        if (await aggregateReader.ReadAsync(cancellationToken))
+        {
+            workspaceCount = aggregateReader.GetInt32(0);
+            examRangeCount = aggregateReader.GetInt32(1);
+            documentCount = aggregateReader.GetInt32(2);
+            generatedCount = aggregateReader.GetInt32(3);
+        }
+
+        await aggregateReader.CloseAsync();
+
+        const string recentSql = """
+                                 SELECT id, name, created_at_utc
+                                 FROM workspaces
+                                 ORDER BY created_at_utc DESC
+                                 LIMIT @limit
+                                 """;
+        await using var recentCommand = new NpgsqlCommand(recentSql, connection);
+        recentCommand.Parameters.AddWithValue("limit", Math.Max(recentCount, 0));
+        await using var recentReader = await recentCommand.ExecuteReaderAsync(cancellationToken);
+
+        var recentWorkspaces = new List<Workspace>();
+        while (await recentReader.ReadAsync(cancellationToken))
+        {
+            recentWorkspaces.Add(new Workspace(
+                id: recentReader.GetGuid(0),
+                name: recentReader.GetString(1),
+                createdAtUtc: recentReader.GetFieldValue<DateTimeOffset>(2)));
+        }
+
+        return new WorkspaceDashboardSnapshot(
+            WorkspaceCount: workspaceCount,
+            ExamRangeCount: examRangeCount,
+            DocumentCount: documentCount,
+            GeneratedCount: generatedCount,
+            RecentWorkspaces: recentWorkspaces);
+    }
+
     private static async Task InsertWorkspaceAsync(
         NpgsqlConnection connection,
         NpgsqlTransaction transaction,

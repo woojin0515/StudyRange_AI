@@ -41,4 +41,20 @@ public sealed class InMemoryWorkspaceRepository : IWorkspaceRepository
         IReadOnlyList<Workspace> result = _store.Values.ToList();
         return Task.FromResult(result);
     }
+
+    public Task<WorkspaceDashboardSnapshot> GetDashboardSnapshotAsync(int recentCount, CancellationToken cancellationToken)
+    {
+        var ordered = _store.Values
+            .OrderByDescending(x => x.CreatedAtUtc)
+            .ToList();
+
+        var snapshot = new WorkspaceDashboardSnapshot(
+            WorkspaceCount: ordered.Count,
+            ExamRangeCount: ordered.Sum(x => x.ExamRanges.Count),
+            DocumentCount: ordered.Sum(x => x.Documents.Count),
+            GeneratedCount: ordered.Sum(x => x.GeneratedContents.Count),
+            RecentWorkspaces: ordered.Take(Math.Max(recentCount, 0)).ToList());
+
+        return Task.FromResult(snapshot);
+    }
 }
