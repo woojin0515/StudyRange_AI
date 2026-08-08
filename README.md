@@ -109,6 +109,9 @@ dotnet run --project src/StudyRange.Web/StudyRange.Web.csproj
 }
 ```
 
+- KOTRY는 OpenAPI 문서 기준으로 `f1`/`v1` 검색쌍이 필수이므로, 앱에서 `f1=keyword`, `v1=과목`, `schulGrad`, `pageUnit`, `pageIndex`를 자동으로 채워 호출합니다.
+- KOTRY 조회는 `openTextBook.do`와 `book.do`를 순차 시도해 응답 포맷 차이를 흡수합니다.
+
 - `Provider = LocalCatalog`: 로컬 카탈로그에서 `(개정년도)_(과목)_(출판사).pdf` 자동 탐색
 - `Provider = HttpTemplate`: `UrlTemplate` 토큰(`{revision}`, `{subject}`, `{publisher}`, `{schoolLevel}`, `{grade}`, `{birthYear}`, `{schoolName}`)으로 원격 PDF 다운로드
 
