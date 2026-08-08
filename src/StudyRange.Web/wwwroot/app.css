@@ -136,3 +136,19 @@ h1:focus {
 .sr-shell-xs {
     max-width: 520px;
 }
+
+.sr-skip-link {
+    position: absolute;
+    left: 0.75rem;
+    top: -100%;
+    z-index: 1200;
+    background: #0f172a;
+    color: #ffffff;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    text-decoration: none;
+}
+
+.sr-skip-link:focus {
+    top: 0.75rem;
+}

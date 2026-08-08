@@ -1,6 +1,8 @@
 ﻿@inherits LayoutComponentBase
 @inject UserSessionState Session
 
+<a class="sr-skip-link" href="#main-content">본문으로 바로가기</a>
+
 <div class="page">
     <div class="sidebar">
         <NavMenu />
@@ -24,7 +26,7 @@
             }
         </div>
 
-        <article class="content px-4">
+        <article id="main-content" tabindex="-1" class="content px-4">
             @Body
         </article>
     </main>
