@@ -7,10 +7,10 @@
     </div>
 </div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" aria-label="메뉴 열기/닫기" />
 
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
+    <nav class="nav flex-column" aria-label="사이드바 내비게이션">
         @if (Session.IsAuthenticated)
         {
             <div class="nav-item px-3">

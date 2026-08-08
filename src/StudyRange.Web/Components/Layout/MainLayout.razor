@@ -4,12 +4,12 @@
 <a class="sr-skip-link" href="#main-content">본문으로 바로가기</a>
 
 <div class="page">
-    <div class="sidebar">
+    <aside class="sidebar" aria-label="주요 메뉴">
         <NavMenu />
-    </div>
+    </aside>
 
-    <main>
-        <div class="top-row px-4 app-top-row">
+    <main aria-label="앱 콘텐츠">
+        <header class="top-row px-4 app-top-row" aria-label="상단 바로가기">
             @if (Session.IsAuthenticated)
             {
                 <MudStack Row="true" Breakpoint="Breakpoint.Sm" AlignItems="AlignItems.Center" Justify="Justify.SpaceBetween" Class="app-topbar-stack">
@@ -24,9 +24,10 @@
             {
                 <span>StudyRange AI</span>
             }
-        </div>
+        </header>
 
         <article id="main-content" tabindex="-1" class="content px-4">
+            <h1 class="sr-visually-hidden">StudyRange AI 앱 콘텐츠</h1>
             @Body
         </article>
     </main>

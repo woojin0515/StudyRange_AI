@@ -2,13 +2,18 @@
 
 <a class="sr-skip-link" href="#public-main-content">본문으로 바로가기</a>
 
-<MudAppBar Elevation="0" Color="Color.Default" Dense="true" Class="public-appbar">
-    <MudText Typo="Typo.h6" Class="public-brand">StudyRange AI</MudText>
-    <MudSpacer />
-    <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/">홈</MudButton>
-    <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/login">로그인</MudButton>
-</MudAppBar>
+<header>
+    <MudAppBar Elevation="0" Color="Color.Default" Dense="true" Class="public-appbar">
+        <MudText Typo="Typo.h6" Class="public-brand">StudyRange AI</MudText>
+        <MudSpacer />
+        <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/">홈</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Primary" Href="/login">로그인</MudButton>
+    </MudAppBar>
+</header>
 
-<MudContainer id="public-main-content" tabindex="-1" MaxWidth="MaxWidth.Large" Class="mt-6 public-container">
-    @Body
-</MudContainer>
+<main aria-label="공개 콘텐츠">
+    <MudContainer id="public-main-content" tabindex="-1" MaxWidth="MaxWidth.Large" Class="mt-6 public-container">
+        <h1 class="sr-visually-hidden">StudyRange AI</h1>
+        @Body
+    </MudContainer>
+</main>
