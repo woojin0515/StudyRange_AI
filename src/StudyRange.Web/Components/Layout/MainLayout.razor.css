@@ -2,6 +2,7 @@
     position: relative;
     display: flex;
     flex-direction: column;
+    min-height: 100vh;
 }
 
 main {
@@ -9,26 +10,27 @@ main {
 }
 
 .sidebar {
-    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+    background: #0f172a;
 }
 
 .top-row {
-    background-color: #f7f7f7;
-    border-bottom: 1px solid #d6d5d5;
+    background-color: #ffffff;
+    border-bottom: 1px solid #d9e0ea;
     justify-content: flex-end;
     height: 3.5rem;
     display: flex;
     align-items: center;
+    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.04);
 }
 
     .top-row ::deep a, .top-row ::deep .btn-link {
         white-space: nowrap;
-        margin-left: 1.5rem;
+        margin-left: 0.75rem;
         text-decoration: none;
     }
 
     .top-row ::deep a:hover, .top-row ::deep .btn-link:hover {
-        text-decoration: underline;
+        text-decoration: none;
     }
 
     .top-row ::deep a:first-child {
@@ -41,8 +43,8 @@ main {
         justify-content: flex-start;
         min-height: 3.5rem;
         height: auto;
-        padding-top: 0.5rem;
-        padding-bottom: 0.5rem;
+        padding-top: 0.6rem;
+        padding-bottom: 0.6rem;
     }
 
     .top-row ::deep a, .top-row ::deep .btn-link {
@@ -56,6 +58,11 @@ main {
 
     .app-topbar-stack ::deep .mud-button-root {
         flex: 1 1 auto;
+    }
+
+    article {
+        padding-left: 0.85rem !important;
+        padding-right: 0.85rem !important;
     }
 }
 

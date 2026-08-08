@@ -1,19 +1,32 @@
-html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+:root {
+    --sr-bg: #f3f6fb;
+    --sr-surface: #ffffff;
+    --sr-border: #d9e0ea;
+    --sr-text: #0f172a;
+    --sr-muted: #52607a;
+    --sr-primary: #2563eb;
+    --sr-primary-hover: #1d4ed8;
+    --sr-focus: #93c5fd;
+    --sr-radius-md: 12px;
+    --sr-radius-sm: 10px;
+    --sr-shadow-sm: 0 4px 18px rgba(15, 23, 42, 0.05);
 }
 
-a, .btn-link {
-    color: #006bb7;
+html,
+body {
+    font-family: "Inter", "Noto Sans KR", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    background: var(--sr-bg);
+    color: var(--sr-text);
 }
 
-.btn-primary {
-    color: #fff;
-    background-color: #1b6ec2;
-    border-color: #1861ac;
+a,
+.btn-link {
+    color: var(--sr-primary);
 }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+a:hover,
+.btn-link:hover {
+    color: var(--sr-primary-hover);
 }
 
 .content {
@@ -57,4 +70,47 @@ h1:focus {
 
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
+}
+
+.mud-paper {
+    border-radius: var(--sr-radius-md);
+}
+
+.mud-paper-outlined {
+    border-color: var(--sr-border) !important;
+    box-shadow: var(--sr-shadow-sm);
+}
+
+.mud-button-filled.mud-button-filled-primary {
+    background-color: var(--sr-primary) !important;
+}
+
+.mud-button-filled.mud-button-filled-primary:hover {
+    background-color: var(--sr-primary-hover) !important;
+}
+
+.mud-button-root {
+    text-transform: none;
+    font-weight: 600;
+}
+
+.mud-input-control-input-container .mud-input-outlined-border {
+    border-color: var(--sr-border);
+}
+
+.mud-input-control-input-container:focus-within .mud-input-outlined-border {
+    border-color: var(--sr-primary) !important;
+}
+
+.mud-input-slot.mud-input-root-outlined {
+    border-radius: var(--sr-radius-sm);
+}
+
+.mud-table-container {
+    border-radius: var(--sr-radius-sm);
+}
+
+.mud-focus-trap *:focus-visible {
+    outline: 2px solid var(--sr-focus);
+    outline-offset: 2px;
 }

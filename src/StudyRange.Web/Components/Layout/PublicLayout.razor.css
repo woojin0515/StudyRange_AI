@@ -1,0 +1,22 @@
+.public-appbar {
+    background: #ffffff;
+    border-bottom: 1px solid #d9e0ea;
+    box-shadow: 0 2px 12px rgba(15, 23, 42, 0.04);
+}
+
+.public-brand {
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+.public-container {
+    padding-bottom: 1.5rem;
+}
+
+@media (max-width: 600px) {
+    .public-container {
+        margin-top: 1rem !important;
+        padding-left: 0.85rem;
+        padding-right: 0.85rem;
+    }
+}
