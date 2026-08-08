@@ -1,6 +1,9 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@inject UserSessionState Session
+@inject NavigationManager Navigation
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">StudyRange AI</a>
+        <a class="navbar-brand" href="/app">StudyRange AI</a>
     </div>
 </div>
 
@@ -8,10 +11,60 @@
 
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> MVP Dashboard
-            </NavLink>
-        </div>
+        @if (Session.IsAuthenticated)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/app" Match="NavLinkMatch.All">
+                    대시보드
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/workspace">
+                    워크스페이스
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/settings">
+                    설정
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/status">
+                    상태센터
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/help">
+                    도움말
+                </NavLink>
+            </div>
+            <div class="nav-item px-3 mt-3">
+                <MudText Typo="Typo.caption">@Session.DisplayName</MudText>
+                <MudButton Variant="Variant.Text" Size="Size.Small" Color="Color.Inherit" OnClick="SignOut">
+                    로그아웃
+                </MudButton>
+            </div>
+        }
+        else
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">
+                    홈
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="/login">
+                    로그인
+                </NavLink>
+            </div>
+        }
     </nav>
 </div>
+
+@code {
+    private void SignOut()
+    {
+        Session.SignOut();
+        Navigation.NavigateTo("/");
+    }
+}

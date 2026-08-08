@@ -1,0 +1,34 @@
+@page "/login"
+@layout Layout.PublicLayout
+@inject UserSessionState Session
+@inject NavigationManager Navigation
+
+<PageTitle>로그인 - StudyRange AI</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small">
+    <MudPaper Outlined="true" Class="pa-6">
+        <MudText Typo="Typo.h5">로그인</MudText>
+        <MudText Typo="Typo.body2" Class="text-secondary mt-1">
+            프로덕션 단계에서는 OAuth/세션 인증으로 교체할 예정입니다.
+        </MudText>
+        <MudTextField @bind-Value="_displayName" Label="표시 이름" Variant="Variant.Outlined" Class="mt-4" FullWidth="true" />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-3" FullWidth="true" OnClick="SignInAsync">
+            로그인
+        </MudButton>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    public string? ReturnUrl { get; set; }
+
+    private string _displayName = string.Empty;
+
+    private Task SignInAsync()
+    {
+        Session.SignIn(_displayName);
+        var target = string.IsNullOrWhiteSpace(ReturnUrl) ? "/app" : ReturnUrl;
+        Navigation.NavigateTo(target);
+        return Task.CompletedTask;
+    }
+}

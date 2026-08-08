@@ -1,6 +1,8 @@
-﻿@page "/"
+﻿@page "/workspace"
 @inject IStudyCoachService StudyCoachService
 @inject IJSRuntime JsRuntime
+@inject UserSessionState Session
+@inject NavigationManager Navigation
 @implements IAsyncDisposable
 
 <PageTitle>StudyRange AI</PageTitle>
@@ -596,6 +598,12 @@
 
     protected override async Task OnInitializedAsync()
     {
+        if (!Session.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/login?returnUrl=/workspace", forceLoad: false);
+            return;
+        }
+
         await ReloadWorkspacesAsync();
         if (_workspaces.Count > 0)
         {

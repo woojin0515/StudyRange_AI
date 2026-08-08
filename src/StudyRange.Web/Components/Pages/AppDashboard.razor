@@ -1,0 +1,66 @@
+@page "/app"
+@inject UserSessionState Session
+@inject NavigationManager Navigation
+
+<PageTitle>앱 대시보드 - StudyRange AI</PageTitle>
+
+@if (!Session.IsAuthenticated)
+{
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">
+        로그인 후 이용할 수 있습니다.
+    </MudAlert>
+}
+else
+{
+    <MudText Typo="Typo.h5">안녕하세요, @Session.DisplayName 님</MudText>
+    <MudText Typo="Typo.body2" Class="text-secondary mt-1">
+        최근 학습 워크플로우로 바로 이동하세요.
+    </MudText>
+    <MudGrid Class="mt-4">
+        <MudItem xs="12" md="4">
+            <MudPaper Outlined="true" Class="pa-4">
+                <MudText Typo="Typo.h6">워크스페이스</MudText>
+                <MudText Typo="Typo.body2">시험범위/문서/생성을 관리합니다.</MudText>
+                <MudButton Variant="Variant.Text" Href="/workspace" Color="Color.Primary">열기</MudButton>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <MudPaper Outlined="true" Class="pa-4">
+                <MudText Typo="Typo.h6">생성 이력</MudText>
+                <MudText Typo="Typo.body2">최근 결과 확인 및 재활용.</MudText>
+                <MudButton Variant="Variant.Text" Href="/workspace" Color="Color.Primary">열기</MudButton>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <MudPaper Outlined="true" Class="pa-4">
+                <MudText Typo="Typo.h6">설정</MudText>
+                <MudText Typo="Typo.body2">학습/알림/연동 상태 설정.</MudText>
+                <MudButton Variant="Variant.Text" Href="/settings" Color="Color.Primary">열기</MudButton>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <MudPaper Outlined="true" Class="pa-4">
+                <MudText Typo="Typo.h6">상태센터</MudText>
+                <MudText Typo="Typo.body2">연동/스토리지/DB 상태와 이슈 해결 가이드.</MudText>
+                <MudButton Variant="Variant.Text" Href="/status" Color="Color.Primary">열기</MudButton>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <MudPaper Outlined="true" Class="pa-4">
+                <MudText Typo="Typo.h6">도움말</MudText>
+                <MudText Typo="Typo.body2">자주 겪는 생성 실패/업로드 실패 해결 방법.</MudText>
+                <MudButton Variant="Variant.Text" Href="/help" Color="Color.Primary">열기</MudButton>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+}
+
+@code {
+    protected override void OnInitialized()
+    {
+        if (!Session.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/login?returnUrl=/app", forceLoad: false);
+        }
+    }
+}

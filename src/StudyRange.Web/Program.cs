@@ -7,6 +7,7 @@ using System.Text.Json;
 using StudyRange.Infrastructure.Integrations;
 using StudyRange.Infrastructure.Persistence;
 using StudyRange.Infrastructure.Storage;
+using StudyRange.Web.App;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +17,8 @@ builder.Services.AddRazorComponents()
 builder.Services.AddMudServices();
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddScoped<UserSessionState>();
+builder.Services.AddScoped<UserPreferencesState>();
 
 var app = builder.Build();
 await app.InitializeInfrastructureAsync();

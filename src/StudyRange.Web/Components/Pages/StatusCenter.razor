@@ -1,0 +1,113 @@
+@page "/status"
+@inject UserSessionState Session
+@inject NavigationManager Navigation
+@inject IHttpClientFactory HttpClientFactory
+
+<PageTitle>상태센터 - StudyRange AI</PageTitle>
+
+@if (!Session.IsAuthenticated)
+{
+    <MudAlert Severity="Severity.Warning" Variant="Variant.Outlined">
+        로그인 후 이용할 수 있습니다.
+    </MudAlert>
+}
+else
+{
+    <MudStack Spacing="2">
+        <MudText Typo="Typo.h5">상태센터</MudText>
+        <MudText Typo="Typo.body2" Class="text-secondary">
+            배포 환경의 연동/스토리지/데이터베이스 상태를 확인합니다.
+        </MudText>
+
+        @if (!string.IsNullOrWhiteSpace(_error))
+        {
+            <MudAlert Severity="Severity.Error" Variant="Variant.Outlined">@_error</MudAlert>
+        }
+
+        <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="LoadStatusAsync" Disabled="_loading">
+            새로고침
+        </MudButton>
+
+        @if (_status is not null)
+        {
+            <MudGrid>
+                <MudItem xs="12" md="4">
+                    <MudPaper Outlined="true" Class="pa-4">
+                        <MudText Typo="Typo.subtitle2">전체 상태</MudText>
+                        <MudText Typo="Typo.h6">@_status.Status</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudPaper Outlined="true" Class="pa-4">
+                        <MudText Typo="Typo.subtitle2">LLM</MudText>
+                        <MudText Typo="Typo.body2">Provider: @_status.Entries.Configuration.LlmProvider</MudText>
+                        <MudText Typo="Typo.body2">Model: @_status.Entries.Configuration.LlmModel</MudText>
+                        <MudText Typo="Typo.body2">Configured: @_status.Entries.Configuration.LlmConfigured</MudText>
+                        @if (_status.Entries.Configuration.LlmMissing.Count > 0)
+                        {
+                            <MudText Typo="Typo.caption" Color="Color.Error">
+                                Missing: @string.Join(", ", _status.Entries.Configuration.LlmMissing)
+                            </MudText>
+                        }
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudPaper Outlined="true" Class="pa-4">
+                        <MudText Typo="Typo.subtitle2">스토리지/DB</MudText>
+                        <MudText Typo="Typo.body2">Storage Writable: @_status.Entries.Storage.Writable</MudText>
+                        <MudText Typo="Typo.body2">DB Provider: @_status.Entries.Database.Provider</MudText>
+                        <MudText Typo="Typo.body2">DB OK: @_status.Entries.Database.Ok</MudText>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        }
+    </MudStack>
+}
+
+@code {
+    private bool _loading;
+    private string? _error;
+    private HealthPayload? _status;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!Session.IsAuthenticated)
+        {
+            Navigation.NavigateTo("/login?returnUrl=/status", forceLoad: false);
+            return;
+        }
+
+        await LoadStatusAsync();
+    }
+
+    private async Task LoadStatusAsync()
+    {
+        _loading = true;
+        _error = null;
+
+        try
+        {
+            var client = HttpClientFactory.CreateClient();
+            var healthUri = new Uri(new Uri(Navigation.BaseUri), "health");
+            _status = await client.GetFromJsonAsync<HealthPayload>(healthUri);
+            if (_status is null)
+            {
+                _error = "상태 응답이 비어 있습니다.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = $"상태 조회 실패: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private sealed record HealthPayload(string Status, EntriesPayload Entries);
+    private sealed record EntriesPayload(ConfigurationPayload Configuration, StoragePayload Storage, DatabasePayload Database);
+    private sealed record ConfigurationPayload(string LlmProvider, string LlmModel, bool LlmConfigured, IReadOnlyList<string> LlmMissing);
+    private sealed record StoragePayload(string RootDirectory, bool Writable, string? Error);
+    private sealed record DatabasePayload(string Provider, bool Ok, string Message);
+}

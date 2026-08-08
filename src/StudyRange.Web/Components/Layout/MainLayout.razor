@@ -1,4 +1,5 @@
 ﻿@inherits LayoutComponentBase
+@inject UserSessionState Session
 
 <div class="page">
     <div class="sidebar">
@@ -7,7 +8,14 @@
 
     <main>
         <div class="top-row px-4">
-            <span>LLM integration: deferred (SPIKE REQUIRED)</span>
+            @if (Session.IsAuthenticated)
+            {
+                <span>@Session.DisplayName 님 학습 공간</span>
+            }
+            else
+            {
+                <span>StudyRange AI</span>
+            }
         </div>
 
         <article class="content px-4">
