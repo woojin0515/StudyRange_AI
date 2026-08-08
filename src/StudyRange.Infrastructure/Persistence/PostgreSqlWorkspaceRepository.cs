@@ -254,6 +254,118 @@ public sealed class PostgreSqlWorkspaceRepository : IWorkspaceRepository
         return result;
     }
 
+    public async Task AddExamRangeAsync(Guid workspaceId, ExamRange examRange, CancellationToken cancellationToken)
+    {
+        await using var connection = _connectionFactory.Create();
+        await connection.OpenAsync(cancellationToken);
+
+        const string sql = """
+                           INSERT INTO exam_ranges (id, workspace_id, subject, start_page, end_page, created_at_utc)
+                           VALUES (@id, @workspace_id, @subject, @start_page, @end_page, @created_at_utc)
+                           """;
+        await using var command = new NpgsqlCommand(sql, connection);
+        command.Parameters.AddWithValue("id", examRange.Id);
+        command.Parameters.AddWithValue("workspace_id", workspaceId);
+        command.Parameters.AddWithValue("subject", examRange.Subject);
+        command.Parameters.AddWithValue("start_page", examRange.Range.StartPage);
+        command.Parameters.AddWithValue("end_page", examRange.Range.EndPage);
+        command.Parameters.AddWithValue("created_at_utc", examRange.CreatedAtUtc);
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    public async Task AddDocumentAsync(DocumentAsset document, CancellationToken cancellationToken)
+    {
+        await using var connection = _connectionFactory.Create();
+        await connection.OpenAsync(cancellationToken);
+
+        const string sql = """
+                           INSERT INTO document_assets (
+                               id, workspace_id, document_type, original_file_name, stored_path, size_in_bytes,
+                               uploaded_at_utc, processing_status, processing_summary)
+                           VALUES (
+                               @id, @workspace_id, @document_type, @original_file_name, @stored_path, @size_in_bytes,
+                               @uploaded_at_utc, @processing_status, @processing_summary)
+                           """;
+        await using var command = new NpgsqlCommand(sql, connection);
+        command.Parameters.AddWithValue("id", document.Id);
+        command.Parameters.AddWithValue("workspace_id", document.WorkspaceId);
+        command.Parameters.AddWithValue("document_type", (int)document.DocumentType);
+        command.Parameters.AddWithValue("original_file_name", document.OriginalFileName);
+        command.Parameters.AddWithValue("stored_path", document.StoredPath);
+        command.Parameters.AddWithValue("size_in_bytes", document.SizeInBytes);
+        command.Parameters.AddWithValue("uploaded_at_utc", document.UploadedAtUtc);
+        command.Parameters.AddWithValue("processing_status", (int)document.ProcessingStatus);
+        command.Parameters.AddWithValue("processing_summary", (object?)document.ProcessingSummary ?? DBNull.Value);
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    public async Task UpdateDocumentProcessingAsync(Guid workspaceId, Guid documentId, ProcessingStatus status, string? summary, CancellationToken cancellationToken)
+    {
+        await using var connection = _connectionFactory.Create();
+        await connection.OpenAsync(cancellationToken);
+
+        const string sql = """
+                           UPDATE document_assets
+                           SET processing_status = @processing_status,
+                               processing_summary = @processing_summary
+                           WHERE workspace_id = @workspace_id
+                             AND id = @document_id
+                           """;
+        await using var command = new NpgsqlCommand(sql, connection);
+        command.Parameters.AddWithValue("workspace_id", workspaceId);
+        command.Parameters.AddWithValue("document_id", documentId);
+        command.Parameters.AddWithValue("processing_status", (int)status);
+        command.Parameters.AddWithValue("processing_summary", (object?)summary ?? DBNull.Value);
+        var affected = await command.ExecuteNonQueryAsync(cancellationToken);
+        if (affected == 0)
+        {
+            throw new InvalidOperationException("Document not found in workspace.");
+        }
+    }
+
+    public async Task AddGeneratedContentAsync(GeneratedContentArtifact content, CancellationToken cancellationToken)
+    {
+        await using var connection = _connectionFactory.Create();
+        await connection.OpenAsync(cancellationToken);
+
+        const string sql = """
+                           INSERT INTO generated_contents (
+                               id, workspace_id, exam_range_id, subject, start_page, end_page, content_type, content, provider, model, generated_at_utc)
+                           VALUES (
+                               @id, @workspace_id, @exam_range_id, @subject, @start_page, @end_page, @content_type, @content, @provider, @model, @generated_at_utc)
+                           """;
+        await using var command = new NpgsqlCommand(sql, connection);
+        command.Parameters.AddWithValue("id", content.Id);
+        command.Parameters.AddWithValue("workspace_id", content.WorkspaceId);
+        command.Parameters.AddWithValue("exam_range_id", content.ExamRangeId);
+        command.Parameters.AddWithValue("subject", content.Subject);
+        command.Parameters.AddWithValue("start_page", content.StartPage);
+        command.Parameters.AddWithValue("end_page", content.EndPage);
+        command.Parameters.AddWithValue("content_type", content.ContentType);
+        command.Parameters.AddWithValue("content", content.Content);
+        command.Parameters.AddWithValue("provider", content.Provider);
+        command.Parameters.AddWithValue("model", content.Model);
+        command.Parameters.AddWithValue("generated_at_utc", content.GeneratedAtUtc);
+        await command.ExecuteNonQueryAsync(cancellationToken);
+    }
+
+    public async Task<bool> DeleteGeneratedContentAsync(Guid workspaceId, Guid generatedContentId, CancellationToken cancellationToken)
+    {
+        await using var connection = _connectionFactory.Create();
+        await connection.OpenAsync(cancellationToken);
+
+        const string sql = """
+                           DELETE FROM generated_contents
+                           WHERE workspace_id = @workspace_id
+                             AND id = @generated_content_id
+                           """;
+        await using var command = new NpgsqlCommand(sql, connection);
+        command.Parameters.AddWithValue("workspace_id", workspaceId);
+        command.Parameters.AddWithValue("generated_content_id", generatedContentId);
+        var affected = await command.ExecuteNonQueryAsync(cancellationToken);
+        return affected > 0;
+    }
+
     public async Task<WorkspaceDashboardSnapshot> GetDashboardSnapshotAsync(int recentCount, CancellationToken cancellationToken)
     {
         await using var connection = _connectionFactory.Create();

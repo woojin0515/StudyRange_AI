@@ -14,6 +14,11 @@ public interface IWorkspaceRepository
     Task<IReadOnlyList<ExamRange>> ListExamRangesAsync(Guid workspaceId, CancellationToken cancellationToken);
     Task<IReadOnlyList<DocumentAsset>> ListDocumentsAsync(Guid workspaceId, CancellationToken cancellationToken);
     Task<IReadOnlyList<GeneratedContentArtifact>> ListGeneratedContentsAsync(Guid workspaceId, CancellationToken cancellationToken);
+    Task AddExamRangeAsync(Guid workspaceId, ExamRange examRange, CancellationToken cancellationToken);
+    Task AddDocumentAsync(DocumentAsset document, CancellationToken cancellationToken);
+    Task UpdateDocumentProcessingAsync(Guid workspaceId, Guid documentId, ProcessingStatus status, string? summary, CancellationToken cancellationToken);
+    Task AddGeneratedContentAsync(GeneratedContentArtifact content, CancellationToken cancellationToken);
+    Task<bool> DeleteGeneratedContentAsync(Guid workspaceId, Guid generatedContentId, CancellationToken cancellationToken);
     Task<WorkspaceDashboardSnapshot> GetDashboardSnapshotAsync(int recentCount, CancellationToken cancellationToken);
 }
 

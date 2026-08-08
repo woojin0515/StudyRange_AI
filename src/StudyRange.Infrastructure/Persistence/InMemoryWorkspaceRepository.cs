@@ -110,4 +110,67 @@ public sealed class InMemoryWorkspaceRepository : IWorkspaceRepository
             .ToList();
         return Task.FromResult(generated);
     }
+
+    public Task AddExamRangeAsync(Guid workspaceId, ExamRange examRange, CancellationToken cancellationToken)
+    {
+        if (!_store.TryGetValue(workspaceId, out var workspace))
+        {
+            throw new InvalidOperationException("Workspace not found.");
+        }
+
+        workspace.AttachExamRange(examRange);
+        return Task.CompletedTask;
+    }
+
+    public Task AddDocumentAsync(DocumentAsset document, CancellationToken cancellationToken)
+    {
+        if (!_store.TryGetValue(document.WorkspaceId, out var workspace))
+        {
+            throw new InvalidOperationException("Workspace not found.");
+        }
+
+        workspace.AttachDocument(document);
+        return Task.CompletedTask;
+    }
+
+    public Task UpdateDocumentProcessingAsync(Guid workspaceId, Guid documentId, ProcessingStatus status, string? summary, CancellationToken cancellationToken)
+    {
+        if (!_store.TryGetValue(workspaceId, out var workspace))
+        {
+            throw new InvalidOperationException("Workspace not found.");
+        }
+
+        var document = workspace.GetDocument(documentId);
+        document.UpdateProcessing(status, summary);
+        return Task.CompletedTask;
+    }
+
+    public Task AddGeneratedContentAsync(GeneratedContentArtifact content, CancellationToken cancellationToken)
+    {
+        if (!_store.TryGetValue(content.WorkspaceId, out var workspace))
+        {
+            throw new InvalidOperationException("Workspace not found.");
+        }
+
+        workspace.AttachGeneratedContent(content);
+        return Task.CompletedTask;
+    }
+
+    public Task<bool> DeleteGeneratedContentAsync(Guid workspaceId, Guid generatedContentId, CancellationToken cancellationToken)
+    {
+        if (!_store.TryGetValue(workspaceId, out var workspace))
+        {
+            return Task.FromResult(false);
+        }
+
+        try
+        {
+            workspace.RemoveGeneratedContent(generatedContentId);
+            return Task.FromResult(true);
+        }
+        catch (InvalidOperationException)
+        {
+            return Task.FromResult(false);
+        }
+    }
 }

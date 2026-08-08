@@ -1,5 +1,6 @@
 using StudyRange.Application.Contracts;
 using StudyRange.Domain.Entities;
+using StudyRange.Domain.ValueObjects;
 
 namespace StudyRange.Application.UseCases;
 
@@ -183,9 +184,13 @@ public sealed class StudyCoachService : IStudyCoachService
         int endPage,
         CancellationToken cancellationToken)
     {
-        var workspace = await GetWorkspaceOrThrowAsync(workspaceId, cancellationToken);
-        var examRange = workspace.AddExamRange(subject, startPage, endPage, DateTimeOffset.UtcNow);
-        await _workspaceRepository.UpdateAsync(workspace, cancellationToken);
+        await EnsureWorkspaceExistsAsync(workspaceId, cancellationToken);
+        var examRange = new ExamRange(
+            id: Guid.NewGuid(),
+            subject: subject,
+            range: new PageRange(startPage, endPage),
+            createdAtUtc: DateTimeOffset.UtcNow);
+        await _workspaceRepository.AddExamRangeAsync(workspaceId, examRange, cancellationToken);
         return MapExamRange(examRange);
     }
 
@@ -215,16 +220,18 @@ public sealed class StudyCoachService : IStudyCoachService
         ValidateUpload(documentType, originalFileName, contentType, fileSize, buffered);
         buffered.Position = 0;
 
-        var workspace = await GetWorkspaceOrThrowAsync(workspaceId, cancellationToken);
+        await EnsureWorkspaceExistsAsync(workspaceId, cancellationToken);
         var storedPath = await _fileStorage.SaveAsync(buffered, originalFileName, cancellationToken);
 
-        var document = workspace.AddDocument(
+        var document = new DocumentAsset(
+            id: Guid.NewGuid(),
+            workspaceId: workspaceId,
             documentType: documentType,
             originalFileName: originalFileName,
             storedPath: storedPath,
             sizeInBytes: fileSize,
             uploadedAtUtc: DateTimeOffset.UtcNow);
-        await _workspaceRepository.UpdateAsync(workspace, cancellationToken);
+        await _workspaceRepository.AddDocumentAsync(document, cancellationToken);
 
         var job = new ProcessingJob(Guid.NewGuid(), workspaceId, document.Id, DateTimeOffset.UtcNow);
         await _processingJobRepository.AddAsync(job, cancellationToken);
@@ -251,7 +258,7 @@ public sealed class StudyCoachService : IStudyCoachService
 
     public async Task RetryProcessingJobAsync(Guid workspaceId, Guid jobId, CancellationToken cancellationToken)
     {
-        var workspace = await GetWorkspaceOrThrowAsync(workspaceId, cancellationToken);
+        await EnsureWorkspaceExistsAsync(workspaceId, cancellationToken);
         var targetJob = await _processingJobRepository.GetByIdAsync(jobId, cancellationToken);
         if (targetJob is null || targetJob.WorkspaceId != workspaceId)
         {
@@ -263,9 +270,18 @@ public sealed class StudyCoachService : IStudyCoachService
             throw new InvalidOperationException("실패 상태의 작업만 재처리할 수 있습니다.");
         }
 
-        var document = workspace.GetDocument(targetJob.DocumentId);
-        document.UpdateProcessing(ProcessingStatus.Queued, "재처리 대기 중");
-        await _workspaceRepository.UpdateAsync(workspace, cancellationToken);
+        var documents = await _workspaceRepository.ListDocumentsAsync(workspaceId, cancellationToken);
+        if (!documents.Any(d => d.Id == targetJob.DocumentId))
+        {
+            throw new InvalidOperationException("재처리 대상 문서를 찾을 수 없습니다.");
+        }
+
+        await _workspaceRepository.UpdateDocumentProcessingAsync(
+            workspaceId,
+            targetJob.DocumentId,
+            ProcessingStatus.Queued,
+            "재처리 대기 중",
+            cancellationToken);
 
         var retryJob = new ProcessingJob(Guid.NewGuid(), workspaceId, targetJob.DocumentId, DateTimeOffset.UtcNow);
         await _processingJobRepository.AddAsync(retryJob, cancellationToken);
@@ -294,9 +310,12 @@ public sealed class StudyCoachService : IStudyCoachService
 
     public async Task DeleteGeneratedContentAsync(Guid workspaceId, Guid generatedContentId, CancellationToken cancellationToken)
     {
-        var workspace = await GetWorkspaceOrThrowAsync(workspaceId, cancellationToken);
-        workspace.RemoveGeneratedContent(generatedContentId);
-        await _workspaceRepository.UpdateAsync(workspace, cancellationToken);
+        await EnsureWorkspaceExistsAsync(workspaceId, cancellationToken);
+        var removed = await _workspaceRepository.DeleteGeneratedContentAsync(workspaceId, generatedContentId, cancellationToken);
+        if (!removed)
+        {
+            throw new InvalidOperationException("Generated content not found in workspace.");
+        }
     }
 
     public async Task<GeneratedStudyContentModel> GenerateContentAsync(
@@ -317,7 +336,7 @@ public sealed class StudyCoachService : IStudyCoachService
 
         ValidateGenerationContext(context);
         var generated = await _studyContentGenerator.GenerateAsync(workspace, examRange, contentType, context, cancellationToken);
-        workspace.AddGeneratedContent(
+        var artifact = workspace.AddGeneratedContent(
             examRangeId: examRange.Id,
             subject: examRange.Subject,
             startPage: examRange.Range.StartPage,
@@ -327,7 +346,7 @@ public sealed class StudyCoachService : IStudyCoachService
             provider: generated.Provider,
             model: generated.Model,
             generatedAtUtc: generated.GeneratedAtUtc);
-        await _workspaceRepository.UpdateAsync(workspace, cancellationToken);
+        await _workspaceRepository.AddGeneratedContentAsync(artifact, cancellationToken);
 
         return generated;
     }
@@ -538,7 +557,9 @@ public sealed class StudyCoachService : IStudyCoachService
 
             await using var content = new MemoryStream(asset.Content);
             var storedPath = await _fileStorage.SaveAsync(content, asset.FileName, cancellationToken);
-            var document = workspace.AddDocument(
+            var document = new DocumentAsset(
+                id: Guid.NewGuid(),
+                workspaceId: workspace.Id,
                 documentType: DocumentType.TextbookPdf,
                 originalFileName: asset.FileName,
                 storedPath: storedPath,
@@ -547,7 +568,8 @@ public sealed class StudyCoachService : IStudyCoachService
             document.UpdateProcessing(
                 ProcessingStatus.Completed,
                 $"자동 확보 완료({fetchResult.Source})");
-            await _workspaceRepository.UpdateAsync(workspace, cancellationToken);
+            workspace.AttachDocument(document);
+            await _workspaceRepository.AddDocumentAsync(document, cancellationToken);
             return;
         }
 
