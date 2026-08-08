@@ -56,6 +56,25 @@ public sealed class InMemoryWorkspaceRepository : IWorkspaceRepository
         return Task.FromResult(result);
     }
 
+    public Task<WorkspaceReadBundle> GetWorkspaceReadBundleAsync(Guid workspaceId, CancellationToken cancellationToken)
+    {
+        if (!_store.TryGetValue(workspaceId, out var workspace))
+        {
+            return Task.FromResult(new WorkspaceReadBundle([], [], []));
+        }
+
+        return Task.FromResult(new WorkspaceReadBundle(
+            ExamRanges: workspace.ExamRanges
+                .OrderByDescending(x => x.CreatedAtUtc)
+                .ToList(),
+            Documents: workspace.Documents
+                .OrderByDescending(x => x.UploadedAtUtc)
+                .ToList(),
+            GeneratedContents: workspace.GeneratedContents
+                .OrderByDescending(x => x.GeneratedAtUtc)
+                .ToList()));
+    }
+
     public Task<WorkspaceDashboardSnapshot> GetDashboardSnapshotAsync(int recentCount, CancellationToken cancellationToken)
     {
         var ordered = _store.Values

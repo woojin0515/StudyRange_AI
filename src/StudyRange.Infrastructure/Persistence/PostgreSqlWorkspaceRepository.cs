@@ -157,6 +157,26 @@ public sealed class PostgreSqlWorkspaceRepository : IWorkspaceRepository
         return result;
     }
 
+    public async Task<WorkspaceReadBundle> GetWorkspaceReadBundleAsync(Guid workspaceId, CancellationToken cancellationToken)
+    {
+        await using var connection = _connectionFactory.Create();
+        await connection.OpenAsync(cancellationToken);
+
+        var workspace = new Workspace(
+            id: workspaceId,
+            name: "_",
+            createdAtUtc: DateTimeOffset.UtcNow);
+
+        await LoadExamRangesAsync(connection, workspace, cancellationToken);
+        await LoadDocumentsAsync(connection, workspace, cancellationToken);
+        await LoadGeneratedContentsAsync(connection, workspace, cancellationToken);
+
+        return new WorkspaceReadBundle(
+            ExamRanges: workspace.ExamRanges.ToList(),
+            Documents: workspace.Documents.ToList(),
+            GeneratedContents: workspace.GeneratedContents.ToList());
+    }
+
     public async Task<IReadOnlyList<ExamRange>> ListExamRangesAsync(Guid workspaceId, CancellationToken cancellationToken)
     {
         var result = new List<ExamRange>();

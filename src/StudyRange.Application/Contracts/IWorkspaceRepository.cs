@@ -11,6 +11,7 @@ public interface IWorkspaceRepository
     Task<Workspace?> GetByIdAsync(Guid workspaceId, CancellationToken cancellationToken);
     Task<IReadOnlyList<Workspace>> ListSummariesAsync(CancellationToken cancellationToken);
     Task<IReadOnlyList<Workspace>> ListAsync(CancellationToken cancellationToken);
+    Task<WorkspaceReadBundle> GetWorkspaceReadBundleAsync(Guid workspaceId, CancellationToken cancellationToken);
     Task<IReadOnlyList<ExamRange>> ListExamRangesAsync(Guid workspaceId, CancellationToken cancellationToken);
     Task<IReadOnlyList<DocumentAsset>> ListDocumentsAsync(Guid workspaceId, CancellationToken cancellationToken);
     Task<IReadOnlyList<GeneratedContentArtifact>> ListGeneratedContentsAsync(Guid workspaceId, CancellationToken cancellationToken);
@@ -28,3 +29,8 @@ public sealed record WorkspaceDashboardSnapshot(
     int DocumentCount,
     int GeneratedCount,
     IReadOnlyList<Workspace> RecentWorkspaces);
+
+public sealed record WorkspaceReadBundle(
+    IReadOnlyList<ExamRange> ExamRanges,
+    IReadOnlyList<DocumentAsset> Documents,
+    IReadOnlyList<GeneratedContentArtifact> GeneratedContents);

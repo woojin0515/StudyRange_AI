@@ -68,30 +68,30 @@ public sealed class StudyCoachService : IStudyCoachService
 
     public async Task<WorkspaceDataBundleModel> GetWorkspaceDataAsync(Guid workspaceId, CancellationToken cancellationToken)
     {
-        var examRangesTask = _workspaceRepository.ListExamRangesAsync(workspaceId, cancellationToken);
-        var documentsTask = _workspaceRepository.ListDocumentsAsync(workspaceId, cancellationToken);
-        var generatedContentsTask = _workspaceRepository.ListGeneratedContentsAsync(workspaceId, cancellationToken);
+        var readBundleTask = _workspaceRepository.GetWorkspaceReadBundleAsync(workspaceId, cancellationToken);
         var jobsTask = _processingJobRepository.ListByWorkspaceAsync(workspaceId, cancellationToken);
 
-        await Task.WhenAll(examRangesTask, documentsTask, generatedContentsTask, jobsTask);
+        await Task.WhenAll(readBundleTask, jobsTask);
 
-        if (examRangesTask.Result.Count == 0 &&
-            documentsTask.Result.Count == 0 &&
-            generatedContentsTask.Result.Count == 0 &&
+        var readBundle = readBundleTask.Result;
+
+        if (readBundle.ExamRanges.Count == 0 &&
+            readBundle.Documents.Count == 0 &&
+            readBundle.GeneratedContents.Count == 0 &&
             jobsTask.Result.Count == 0)
         {
             await EnsureWorkspaceExistsAsync(workspaceId, cancellationToken);
         }
 
-        var examRangeModels = examRangesTask.Result
+        var examRangeModels = readBundle.ExamRanges
             .Select(MapExamRange)
             .ToList();
 
-        var documentModels = documentsTask.Result
+        var documentModels = readBundle.Documents
             .Select(MapDocument)
             .ToList();
 
-        var generatedContentModels = generatedContentsTask.Result
+        var generatedContentModels = readBundle.GeneratedContents
             .Select(x => new GeneratedContentHistoryModel(
                 Id: x.Id,
                 ExamRangeId: x.ExamRangeId,
