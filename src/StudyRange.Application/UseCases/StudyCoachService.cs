@@ -68,13 +68,20 @@ public sealed class StudyCoachService : IStudyCoachService
 
     public async Task<WorkspaceDataBundleModel> GetWorkspaceDataAsync(Guid workspaceId, CancellationToken cancellationToken)
     {
-        await EnsureWorkspaceExistsAsync(workspaceId, cancellationToken);
         var examRangesTask = _workspaceRepository.ListExamRangesAsync(workspaceId, cancellationToken);
         var documentsTask = _workspaceRepository.ListDocumentsAsync(workspaceId, cancellationToken);
         var generatedContentsTask = _workspaceRepository.ListGeneratedContentsAsync(workspaceId, cancellationToken);
         var jobsTask = _processingJobRepository.ListByWorkspaceAsync(workspaceId, cancellationToken);
 
         await Task.WhenAll(examRangesTask, documentsTask, generatedContentsTask, jobsTask);
+
+        if (examRangesTask.Result.Count == 0 &&
+            documentsTask.Result.Count == 0 &&
+            generatedContentsTask.Result.Count == 0 &&
+            jobsTask.Result.Count == 0)
+        {
+            await EnsureWorkspaceExistsAsync(workspaceId, cancellationToken);
+        }
 
         var examRangeModels = examRangesTask.Result
             .Select(MapExamRange)
@@ -118,11 +125,15 @@ public sealed class StudyCoachService : IStudyCoachService
 
     public async Task<WorkspaceProcessingBundleModel> GetWorkspaceProcessingDataAsync(Guid workspaceId, CancellationToken cancellationToken)
     {
-        await EnsureWorkspaceExistsAsync(workspaceId, cancellationToken);
         var documentsTask = _workspaceRepository.ListDocumentsAsync(workspaceId, cancellationToken);
         var jobsTask = _processingJobRepository.ListByWorkspaceAsync(workspaceId, cancellationToken);
 
         await Task.WhenAll(documentsTask, jobsTask);
+
+        if (documentsTask.Result.Count == 0 && jobsTask.Result.Count == 0)
+        {
+            await EnsureWorkspaceExistsAsync(workspaceId, cancellationToken);
+        }
 
         var documents = documentsTask.Result
             .Select(MapDocument)
@@ -165,8 +176,11 @@ public sealed class StudyCoachService : IStudyCoachService
 
     public async Task<IReadOnlyList<ExamRangeModel>> GetExamRangesAsync(Guid workspaceId, CancellationToken cancellationToken)
     {
-        await EnsureWorkspaceExistsAsync(workspaceId, cancellationToken);
         var ranges = await _workspaceRepository.ListExamRangesAsync(workspaceId, cancellationToken);
+        if (ranges.Count == 0)
+        {
+            await EnsureWorkspaceExistsAsync(workspaceId, cancellationToken);
+        }
         return ranges
             .OrderByDescending(r => r.CreatedAtUtc)
             .Select(MapExamRange)
@@ -192,8 +206,11 @@ public sealed class StudyCoachService : IStudyCoachService
 
     public async Task<IReadOnlyList<DocumentModel>> GetDocumentsAsync(Guid workspaceId, CancellationToken cancellationToken)
     {
-        await EnsureWorkspaceExistsAsync(workspaceId, cancellationToken);
         var documents = await _workspaceRepository.ListDocumentsAsync(workspaceId, cancellationToken);
+        if (documents.Count == 0)
+        {
+            await EnsureWorkspaceExistsAsync(workspaceId, cancellationToken);
+        }
         return documents
             .OrderByDescending(d => d.UploadedAtUtc)
             .Select(MapDocument)
@@ -286,8 +303,11 @@ public sealed class StudyCoachService : IStudyCoachService
 
     public async Task<IReadOnlyList<GeneratedContentHistoryModel>> GetGeneratedContentsAsync(Guid workspaceId, CancellationToken cancellationToken)
     {
-        await EnsureWorkspaceExistsAsync(workspaceId, cancellationToken);
         var generatedContents = await _workspaceRepository.ListGeneratedContentsAsync(workspaceId, cancellationToken);
+        if (generatedContents.Count == 0)
+        {
+            await EnsureWorkspaceExistsAsync(workspaceId, cancellationToken);
+        }
         return generatedContents
             .OrderByDescending(x => x.GeneratedAtUtc)
             .Select(x => new GeneratedContentHistoryModel(
