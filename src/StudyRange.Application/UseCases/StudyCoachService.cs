@@ -43,7 +43,7 @@ public sealed class StudyCoachService : IStudyCoachService
 
     public async Task<IReadOnlyList<WorkspaceModel>> GetWorkspacesAsync(CancellationToken cancellationToken)
     {
-        var workspaces = await _workspaceRepository.ListAsync(cancellationToken);
+        var workspaces = await _workspaceRepository.ListSummariesAsync(cancellationToken);
         return workspaces
             .OrderByDescending(w => w.CreatedAtUtc)
             .Select(MapWorkspace)

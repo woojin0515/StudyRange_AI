@@ -119,6 +119,32 @@ public sealed class PostgreSqlWorkspaceRepository : IWorkspaceRepository
         return result;
     }
 
+    public async Task<IReadOnlyList<Workspace>> ListSummariesAsync(CancellationToken cancellationToken)
+    {
+        var result = new List<Workspace>();
+
+        await using var connection = _connectionFactory.Create();
+        await connection.OpenAsync(cancellationToken);
+
+        const string sql = """
+                           SELECT id, name, created_at_utc
+                           FROM workspaces
+                           ORDER BY created_at_utc DESC
+                           """;
+        await using var command = new NpgsqlCommand(sql, connection);
+        await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+
+        while (await reader.ReadAsync(cancellationToken))
+        {
+            result.Add(new Workspace(
+                id: reader.GetGuid(0),
+                name: reader.GetString(1),
+                createdAtUtc: reader.GetFieldValue<DateTimeOffset>(2)));
+        }
+
+        return result;
+    }
+
     public async Task<WorkspaceDashboardSnapshot> GetDashboardSnapshotAsync(int recentCount, CancellationToken cancellationToken)
     {
         await using var connection = _connectionFactory.Create();
