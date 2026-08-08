@@ -15,7 +15,7 @@
 </head>
 
 <body>
-    <MudThemeProvider @rendermode="InteractiveServer" />
+    <MudThemeProvider Theme="_studyRangeTheme" @rendermode="InteractiveServer" />
     <MudPopoverProvider @rendermode="InteractiveServer" />
     <MudDialogProvider @rendermode="InteractiveServer" />
     <MudSnackbarProvider @rendermode="InteractiveServer" />
@@ -26,3 +26,31 @@
 </body>
 
 </html>
+
+@code {
+    private readonly MudTheme _studyRangeTheme = new()
+    {
+        PaletteLight = new PaletteLight
+        {
+            Primary = "#2563eb",
+            Secondary = "#7c3aed",
+            Background = "#f3f6fb",
+            Surface = "#ffffff",
+            AppbarBackground = "#ffffff",
+            AppbarText = "#0f172a",
+            DrawerBackground = "#0f172a",
+            DrawerText = "#dbe6fb",
+            TextPrimary = "#0f172a",
+            TextSecondary = "#52607a",
+            Divider = "#d9e0ea",
+            Error = "#dc2626",
+            Warning = "#d97706",
+            Success = "#16a34a",
+            Info = "#0284c7"
+        },
+        LayoutProperties = new LayoutProperties
+        {
+            DefaultBorderRadius = "12px"
+        }
+    };
+}
