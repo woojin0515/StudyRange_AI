@@ -72,23 +72,19 @@ public sealed class StudyCoachService : IStudyCoachService
         var examRangesTask = _workspaceRepository.ListExamRangesAsync(workspaceId, cancellationToken);
         var documentsTask = _workspaceRepository.ListDocumentsAsync(workspaceId, cancellationToken);
         var generatedContentsTask = _workspaceRepository.ListGeneratedContentsAsync(workspaceId, cancellationToken);
-        var jobs = await _processingJobRepository.ListByWorkspaceAsync(workspaceId, cancellationToken);
-        var examRanges = await examRangesTask;
-        var documents = await documentsTask;
-        var generatedContents = await generatedContentsTask;
+        var jobsTask = _processingJobRepository.ListByWorkspaceAsync(workspaceId, cancellationToken);
 
-        var examRangeModels = examRanges
-            .OrderByDescending(r => r.CreatedAtUtc)
+        await Task.WhenAll(examRangesTask, documentsTask, generatedContentsTask, jobsTask);
+
+        var examRangeModels = examRangesTask.Result
             .Select(MapExamRange)
             .ToList();
 
-        var documentModels = documents
-            .OrderByDescending(d => d.UploadedAtUtc)
+        var documentModels = documentsTask.Result
             .Select(MapDocument)
             .ToList();
 
-        var generatedContentModels = generatedContents
-            .OrderByDescending(x => x.GeneratedAtUtc)
+        var generatedContentModels = generatedContentsTask.Result
             .Select(x => new GeneratedContentHistoryModel(
                 Id: x.Id,
                 ExamRangeId: x.ExamRangeId,
@@ -102,8 +98,7 @@ public sealed class StudyCoachService : IStudyCoachService
                 GeneratedAtUtc: x.GeneratedAtUtc))
             .ToList();
 
-        var processingJobs = jobs
-            .OrderByDescending(j => j.CreatedAtUtc)
+        var processingJobs = jobsTask.Result
             .Select(j => new ProcessingJobModel(
                 j.Id,
                 j.DocumentId,
@@ -127,13 +122,13 @@ public sealed class StudyCoachService : IStudyCoachService
         var documentsTask = _workspaceRepository.ListDocumentsAsync(workspaceId, cancellationToken);
         var jobsTask = _processingJobRepository.ListByWorkspaceAsync(workspaceId, cancellationToken);
 
-        var documents = (await documentsTask)
-            .OrderByDescending(d => d.UploadedAtUtc)
+        await Task.WhenAll(documentsTask, jobsTask);
+
+        var documents = documentsTask.Result
             .Select(MapDocument)
             .ToList();
 
-        var jobs = (await jobsTask)
-            .OrderByDescending(j => j.CreatedAtUtc)
+        var jobs = jobsTask.Result
             .Select(j => new ProcessingJobModel(
                 j.Id,
                 j.DocumentId,
