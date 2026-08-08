@@ -209,6 +209,19 @@ public sealed class StudyCoachService : IStudyCoachService
             throw new InvalidOperationException("선택한 시험 범위를 찾을 수 없습니다.");
         }
 
+        var textbookDocuments = workspace.Documents
+            .Where(x => x.DocumentType == DocumentType.TextbookPdf)
+            .ToList();
+        if (textbookDocuments.Count == 0)
+        {
+            throw new InvalidOperationException("교과서 PDF가 없습니다. 문서 유형을 '교과서'로 업로드한 뒤 다시 시도하세요.");
+        }
+
+        if (textbookDocuments.All(x => x.ProcessingStatus != ProcessingStatus.Completed))
+        {
+            throw new InvalidOperationException("교과서 PDF 처리가 완료되지 않았습니다. 처리 완료 후 다시 시도하세요.");
+        }
+
         ValidateGenerationContext(context);
         var generated = await _studyContentGenerator.GenerateAsync(workspace, examRange, contentType, context, cancellationToken);
         workspace.AddGeneratedContent(
