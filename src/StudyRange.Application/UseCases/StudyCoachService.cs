@@ -158,8 +158,9 @@ public sealed class StudyCoachService : IStudyCoachService
 
     public async Task DeleteWorkspaceAsync(Guid workspaceId, CancellationToken cancellationToken)
     {
-        var workspace = await GetWorkspaceOrThrowAsync(workspaceId, cancellationToken);
-        foreach (var path in workspace.Documents.Select(x => x.StoredPath).Distinct(StringComparer.Ordinal))
+        await EnsureWorkspaceExistsAsync(workspaceId, cancellationToken);
+        var documents = await _workspaceRepository.ListDocumentsAsync(workspaceId, cancellationToken);
+        foreach (var path in documents.Select(x => x.StoredPath).Distinct(StringComparer.Ordinal))
         {
             _ = await _fileStorage.DeleteAsync(path, cancellationToken);
         }
