@@ -231,19 +231,11 @@ public sealed class AzureOpenAiStudyContentGenerator : IStudyContentGenerator
     private static TextbookSourceResult BuildSourceForExamRange(Workspace workspace, ExamRange examRange)
     {
         var textbookDocuments = workspace.Documents
-            .Where(x => x.DocumentType == DocumentType.TextbookPdf)
+            .Where(x => x.DocumentType == DocumentType.TextbookPdf && File.Exists(x.StoredPath))
             .ToList();
         if (textbookDocuments.Count == 0)
         {
             return TextbookSourceResult.Fail("교과서 PDF가 없습니다. 문서 유형을 '교과서'로 업로드한 뒤 다시 시도하세요.");
-        }
-
-        var completedTextbookDocuments = textbookDocuments
-            .Where(x => x.ProcessingStatus == ProcessingStatus.Completed)
-            .ToList();
-        if (completedTextbookDocuments.Count == 0)
-        {
-            return TextbookSourceResult.Fail("교과서 문서 처리가 아직 완료되지 않았습니다. 처리 완료 후 다시 시도하세요.");
         }
 
         var snippets = new List<string>();
@@ -251,13 +243,8 @@ public sealed class AzureOpenAiStudyContentGenerator : IStudyContentGenerator
         const int maxSnippetChars = 14000;
         var currentChars = 0;
 
-        foreach (var document in completedTextbookDocuments)
+        foreach (var document in textbookDocuments)
         {
-            if (!File.Exists(document.StoredPath))
-            {
-                continue;
-            }
-
             using var pdf = PdfDocument.Open(document.StoredPath);
             var start = Math.Max(1, examRange.Range.StartPage);
             var end = Math.Min(pdf.NumberOfPages, examRange.Range.EndPage);

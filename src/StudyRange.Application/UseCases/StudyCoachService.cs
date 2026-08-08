@@ -21,6 +21,7 @@ public sealed class StudyCoachService : IStudyCoachService
     private readonly IProcessingQueue _processingQueue;
     private readonly IStudyContentGenerator _studyContentGenerator;
     private readonly IEducationMetadataService _educationMetadataService;
+    private readonly IReadOnlyList<ITextbookPdfProvider> _textbookPdfProviders;
 
     public StudyCoachService(
         IWorkspaceRepository workspaceRepository,
@@ -28,7 +29,8 @@ public sealed class StudyCoachService : IStudyCoachService
         IFileStorage fileStorage,
         IProcessingQueue processingQueue,
         IStudyContentGenerator studyContentGenerator,
-        IEducationMetadataService educationMetadataService)
+        IEducationMetadataService educationMetadataService,
+        IEnumerable<ITextbookPdfProvider> textbookPdfProviders)
     {
         _workspaceRepository = workspaceRepository;
         _processingJobRepository = processingJobRepository;
@@ -36,6 +38,7 @@ public sealed class StudyCoachService : IStudyCoachService
         _processingQueue = processingQueue;
         _studyContentGenerator = studyContentGenerator;
         _educationMetadataService = educationMetadataService;
+        _textbookPdfProviders = textbookPdfProviders.ToList();
     }
 
     public async Task<IReadOnlyList<WorkspaceModel>> GetWorkspacesAsync(CancellationToken cancellationToken)
@@ -209,18 +212,7 @@ public sealed class StudyCoachService : IStudyCoachService
             throw new InvalidOperationException("선택한 시험 범위를 찾을 수 없습니다.");
         }
 
-        var textbookDocuments = workspace.Documents
-            .Where(x => x.DocumentType == DocumentType.TextbookPdf)
-            .ToList();
-        if (textbookDocuments.Count == 0)
-        {
-            throw new InvalidOperationException("교과서 PDF가 없습니다. 문서 유형을 '교과서'로 업로드한 뒤 다시 시도하세요.");
-        }
-
-        if (textbookDocuments.All(x => x.ProcessingStatus != ProcessingStatus.Completed))
-        {
-            throw new InvalidOperationException("교과서 PDF 처리가 완료되지 않았습니다. 처리 완료 후 다시 시도하세요.");
-        }
+        await EnsureTextbookPdfReadyAsync(workspace, context, cancellationToken);
 
         ValidateGenerationContext(context);
         var generated = await _studyContentGenerator.GenerateAsync(workspace, examRange, contentType, context, cancellationToken);
@@ -398,6 +390,72 @@ public sealed class StudyCoachService : IStudyCoachService
         {
             throw new InvalidOperationException("출판사를 확정한 뒤 다시 시도하세요.");
         }
+    }
+
+    private async Task EnsureTextbookPdfReadyAsync(
+        Workspace workspace,
+        GeneratedContentContextModel context,
+        CancellationToken cancellationToken)
+    {
+        var hasExistingTextbookPdf = workspace.Documents.Any(x =>
+            x.DocumentType == DocumentType.TextbookPdf &&
+            File.Exists(x.StoredPath));
+        if (hasExistingTextbookPdf)
+        {
+            return;
+        }
+
+        if (_textbookPdfProviders.Count == 0)
+        {
+            throw new InvalidOperationException("교과서 PDF 자동 확보 공급자가 설정되지 않았습니다.");
+        }
+
+        var failures = new List<string>();
+        foreach (var provider in _textbookPdfProviders)
+        {
+            var fetchResult = await provider.FetchTextbookPdfAsync(context, cancellationToken);
+            if (!fetchResult.Success || fetchResult.Items.Count == 0)
+            {
+                failures.Add($"{fetchResult.Source}: {fetchResult.Message}");
+                continue;
+            }
+
+            var asset = fetchResult.Items[0];
+            if (!LooksLikePdf(asset.Content))
+            {
+                failures.Add($"{fetchResult.Source}: PDF 시그니처가 올바르지 않습니다.");
+                continue;
+            }
+
+            await using var content = new MemoryStream(asset.Content);
+            var storedPath = await _fileStorage.SaveAsync(content, asset.FileName, cancellationToken);
+            var document = workspace.AddDocument(
+                documentType: DocumentType.TextbookPdf,
+                originalFileName: asset.FileName,
+                storedPath: storedPath,
+                sizeInBytes: asset.Content.LongLength,
+                uploadedAtUtc: DateTimeOffset.UtcNow);
+            document.UpdateProcessing(
+                ProcessingStatus.Completed,
+                $"자동 확보 완료({fetchResult.Source})");
+            await _workspaceRepository.UpdateAsync(workspace, cancellationToken);
+            return;
+        }
+
+        var reason = failures.Count == 0
+            ? "자동 확보 가능한 교과서 PDF를 찾지 못했습니다."
+            : string.Join(" | ", failures);
+        throw new InvalidOperationException(
+            $"교과서 PDF 자동 확보 실패: {reason}. `App_Data/textbook-catalog/(개정년도)_(과목)_(출판사).pdf` 저장 또는 TextbookPdf API 설정이 필요합니다.");
+    }
+
+    private static bool LooksLikePdf(byte[] content)
+    {
+        return content.Length >= 4 &&
+               content[0] == 0x25 &&
+               content[1] == 0x50 &&
+               content[2] == 0x44 &&
+               content[3] == 0x46;
     }
 
     private static bool HasAllowedBinarySignature(Stream content)

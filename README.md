@@ -66,7 +66,10 @@ dotnet run --project src/StudyRange.Web/StudyRange.Web.csproj
 
 ### 생성 동작(근거 기반)
 
-- 요약/퀴즈 생성은 **교과서 PDF(TextbookPdf) 처리 완료 문서의 시험범위 페이지 텍스트**를 근거로만 생성합니다.
+- 요약/퀴즈 생성은 **교과서 PDF(TextbookPdf) 시험범위 페이지 텍스트**를 근거로만 생성합니다.
+- Workspace에 교과서 PDF가 없으면 아래 순서로 자동 확보를 시도합니다.
+  1) `EducationApis:TextbookPdf:CatalogDirectory`에서 `(개정년도)_(과목)_(출판사).pdf` 탐색
+  2) `Provider = HttpTemplate`일 때 `UrlTemplate`로 원격 PDF 다운로드 후 카탈로그 캐시
 - 선택 범위 페이지에서 근거 텍스트를 찾지 못하면 생성을 차단하고 오류를 반환합니다.
 - 학교급/학년/출생년도/학교명/출판사/개정년도 메타데이터를 생성 프롬프트에 함께 반영합니다.
 
@@ -95,9 +98,19 @@ dotnet run --project src/StudyRange.Web/StudyRange.Web.csproj
   "Neis": {
     "BaseUrl": "https://open.neis.go.kr",
     "ApiKey": ""
+  },
+  "TextbookPdf": {
+    "Provider": "LocalCatalog",
+    "CatalogDirectory": "App_Data/textbook-catalog",
+    "UrlTemplate": "",
+    "ApiKey": "",
+    "ApiKeyHeaderName": "X-API-Key"
   }
 }
 ```
+
+- `Provider = LocalCatalog`: 로컬 카탈로그에서 `(개정년도)_(과목)_(출판사).pdf` 자동 탐색
+- `Provider = HttpTemplate`: `UrlTemplate` 토큰(`{revision}`, `{subject}`, `{publisher}`, `{schoolLevel}`, `{grade}`, `{birthYear}`, `{schoolName}`)으로 원격 PDF 다운로드
 
 ### OCR (선택)
 

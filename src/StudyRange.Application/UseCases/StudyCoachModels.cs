@@ -47,6 +47,10 @@ public sealed record GeneratedContentContextModel(
     string? CurriculumRevision,
     string? TextbookPublisher);
 
+public sealed record TextbookPdfAssetModel(
+    string FileName,
+    byte[] Content);
+
 public sealed record GeneratedContentHistoryModel(
     Guid Id,
     Guid ExamRangeId,

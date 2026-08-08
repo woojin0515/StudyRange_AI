@@ -44,6 +44,7 @@ public static class DependencyInjection
         services.Configure<KotryApiOptions>(configuration.GetSection(KotryApiOptions.SectionName));
         services.Configure<NcicApiOptions>(configuration.GetSection(NcicApiOptions.SectionName));
         services.Configure<NeisApiOptions>(configuration.GetSection(NeisApiOptions.SectionName));
+        services.Configure<TextbookPdfOptions>(configuration.GetSection(TextbookPdfOptions.SectionName));
 
         var persistenceOptions = configuration.GetSection(PersistenceOptions.SectionName).Get<PersistenceOptions>() ?? new PersistenceOptions();
         services.AddSingleton(persistenceOptions);
@@ -79,6 +80,7 @@ public static class DependencyInjection
         services.AddHttpClient<AzureOpenAiStudyContentGenerator>();
         services.AddHttpClient<KotryTextbookProvider>();
         services.AddHttpClient<NeisSchoolContextProvider>();
+        services.AddHttpClient<ConfigurableTextbookPdfProvider>();
         if (!string.Equals(llmOptions.Provider, "Mock", StringComparison.OrdinalIgnoreCase))
         {
             services.AddTransient<IStudyContentGenerator, AzureOpenAiStudyContentGenerator>();
@@ -100,6 +102,7 @@ public static class DependencyInjection
             services.AddTransient<IEducationTextbookProvider, KotryTextbookProvider>();
         }
         services.AddSingleton<IEducationSchoolContextProvider, NeisSchoolContextProvider>();
+        services.AddTransient<ITextbookPdfProvider, ConfigurableTextbookPdfProvider>();
 
         services.AddHostedService<DocumentProcessingWorker>();
         services.AddHealthChecks()

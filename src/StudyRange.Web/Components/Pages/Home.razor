@@ -571,15 +571,11 @@
     private bool CanGenerateContent =>
         IsWorkspaceSelected &&
         Guid.TryParse(_selectedExamRangeId, out _) &&
-        !string.IsNullOrWhiteSpace(_resolvedTextbookPublisher) &&
-        HasCompletedTextbookPdf;
+        !string.IsNullOrWhiteSpace(_resolvedTextbookPublisher);
     private string GenerationBlockedReason =>
         !IsWorkspaceSelected ? "먼저 Workspace를 선택하세요."
         : !Guid.TryParse(_selectedExamRangeId, out _) ? "시험 범위를 먼저 선택하세요."
         : string.IsNullOrWhiteSpace(_resolvedTextbookPublisher) ? "먼저 메타데이터 조회 후 출판사를 확정하세요."
-        : !HasUploadedTextbookPdf ? "교과서 PDF를 문서 유형 '교과서'로 업로드하세요."
-        : IsTextbookPdfProcessing ? "교과서 PDF 처리 중입니다. 완료 후 다시 시도하세요."
-        : !HasCompletedTextbookPdf ? "처리 완료된 교과서 PDF가 없습니다. 업로드 상태를 확인하세요."
         : string.Empty;
     private string ExamRangeSubjectDisplay =>
         string.IsNullOrWhiteSpace(_resolvedMetadataSubject)
@@ -597,14 +593,6 @@
         DocumentType.Worksheet or DocumentType.HandwrittenNotes => ".pdf,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg,image/webp",
         _ => ".pdf"
     };
-    private bool HasUploadedTextbookPdf =>
-        _documents.Any(x => x.DocumentType == DocumentType.TextbookPdf);
-    private bool HasCompletedTextbookPdf =>
-        _documents.Any(x => x.DocumentType == DocumentType.TextbookPdf && x.ProcessingStatus == ProcessingStatus.Completed);
-    private bool IsTextbookPdfProcessing =>
-        _documents.Any(x =>
-            x.DocumentType == DocumentType.TextbookPdf &&
-            x.ProcessingStatus is ProcessingStatus.Queued or ProcessingStatus.Processing);
 
     protected override async Task OnInitializedAsync()
     {
