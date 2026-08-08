@@ -180,6 +180,23 @@ h1:focus {
     border: 0;
 }
 
+.sr-on-dark,
+.sr-on-dark .mud-typography,
+.sr-on-dark a,
+.sr-on-dark .mud-button-root,
+.sr-on-dark .nav-link {
+    color: #f8fafc;
+}
+
+.sr-on-dark a:hover,
+.sr-on-dark a:focus,
+.sr-on-dark .mud-button-root:hover,
+.sr-on-dark .mud-button-root:focus,
+.sr-on-dark .nav-link:hover,
+.sr-on-dark .nav-link:focus {
+    color: #ffffff;
+}
+
 @media (max-width: 600px) {
     .sr-shell {
         padding-left: 0.55rem;

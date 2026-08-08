@@ -1,7 +1,7 @@
 ﻿@inject UserSessionState Session
 @inject NavigationManager Navigation
 
-<div class="top-row ps-3 navbar navbar-dark">
+<div class="top-row ps-3 navbar navbar-dark sr-on-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="/app">StudyRange AI</a>
     </div>
@@ -9,7 +9,7 @@
 
 <input type="checkbox" title="Navigation menu" class="navbar-toggler" aria-label="메뉴 열기/닫기" />
 
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+<div class="nav-scrollable sr-on-dark" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="nav flex-column" aria-label="사이드바 내비게이션">
         @if (Session.IsAuthenticated)
         {
