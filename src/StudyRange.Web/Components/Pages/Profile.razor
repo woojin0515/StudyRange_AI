@@ -16,7 +16,6 @@ else
     <MudText Typo="Typo.h5">프로필</MudText>
     <MudPaper Outlined="true" Class="pa-4 mt-3">
         <MudTextField @bind-Value="_displayName" Label="표시 이름" Variant="Variant.Outlined" FullWidth="true" />
-        <MudTextField @bind-Value="Preferences.DefaultSubject" Label="기본 과목" Variant="Variant.Outlined" FullWidth="true" Class="mt-3" />
         <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-3" OnClick="SaveProfile">
             저장
         </MudButton>
